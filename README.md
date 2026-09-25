@@ -7,11 +7,11 @@ You still work in the terminal. But when the agent says "here's my plan," instea
 ## Install
 
 ```sh
-git clone https://github.com/dannyhamam/blueprint.git ~/Projects/blueprint
-cd ~/Projects/blueprint && ./install.sh
+git clone https://github.com/dannyhamam/blueprint.git
+cd blueprint && ./install.sh
 ```
 
-That symlinks the repo into `~/.claude/skills/blueprint` and `~/.cursor/skills/blueprint`. `git pull` updates both. To put it in a single project instead, copy or symlink the repo to `.claude/skills/blueprint` or `.cursor/skills/blueprint` inside that project.
+That symlinks the clone into `~/.claude/skills/blueprint` and `~/.cursor/skills/blueprint`, so keep it where you cloned it. `git pull` updates both. To put it in a single project instead, copy or symlink the repo to `.claude/skills/blueprint` or `.cursor/skills/blueprint` inside that project.
 
 ## Use
 
