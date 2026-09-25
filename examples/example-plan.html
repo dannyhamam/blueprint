@@ -1,0 +1,423 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Add rate limiting to the public API · Blueprint</title>
+<style>
+/* =====================================================================
+   Blueprint design system
+   Do NOT edit this block inside a rendered plan. Design changes belong in
+   the blueprint repo (templates/plan.html) so every plan stays consistent.
+   Per-plan overrides the user explicitly asked for go in <style id="custom">.
+   ===================================================================== */
+:root{
+  --bg:#FBFBF9; --surface:#F4F3EE; --surface-2:#ECEAE2; --paper:#FFFFFF;
+  --ink:#1E1D1A; --ink-2:#55534C; --ink-3:#8E8C83;
+  --line:#E2E0D8; --line-2:#CFCDC3;
+  --blue:#2451D6; --blue-soft:#E8EDFB; --blue-line:#C9D5F5; --blue-ink:#1A3CA8;
+  --good:#2C7A4B; --good-soft:#E6F2EA; --good-line:#BFDCC9;
+  --warn:#A86B12; --warn-soft:#FBF0DC; --warn-line:#EED9B0;
+  --bad:#B23A32;  --bad-soft:#F9E6E4;  --bad-line:#EFC7C3;
+  --serif:"Charter","Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+  --sans:-apple-system,BlinkMacSystemFont,"Inter","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+  --side:232px; --content:740px; --gap:56px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:15.5px/1.6 var(--sans);-webkit-font-smoothing:antialiased}
+a{color:var(--blue);text-decoration:none}a:hover{text-decoration:underline}
+code,kbd{font-family:var(--mono);font-size:.86em}
+code{background:var(--surface);padding:.1em .38em;border-radius:4px;border:1px solid var(--line)}
+pre{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:14px 16px;overflow:auto;font:13px/1.55 var(--mono);margin:14px 0 20px}
+pre code{background:none;border:0;padding:0;font-size:inherit}
+strong,b{font-weight:600}
+
+/* ---- layout ---- */
+.page{display:grid;grid-template-columns:var(--side) minmax(0,1fr);max-width:calc(var(--side) + var(--content) + var(--gap)*2);margin:0 auto;padding:0 32px}
+nav.toc{position:sticky;top:0;height:100vh;padding:48px 24px 48px 0;border-right:1px solid var(--line);font-size:13px;overflow:auto}
+nav.toc .brand{font:600 11px/1 var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);margin-bottom:28px}
+nav.toc ol{list-style:none;margin:0;padding:0}
+nav.toc li a{display:flex;gap:10px;padding:6px 0 6px 12px;color:var(--ink-2);border-left:2px solid transparent;margin-left:-1px}
+nav.toc li a .n{font:500 11px var(--mono);color:var(--ink-3);min-width:18px;padding-top:3px}
+nav.toc li a.active{color:var(--ink);border-color:var(--blue)}
+nav.toc li a.active .n{color:var(--blue)}
+nav.toc li a:hover{text-decoration:none;color:var(--ink)}
+main{padding:48px 0 120px var(--gap);max-width:calc(var(--content) + var(--gap))}
+
+/* ---- header ---- */
+header.plan h1{font:400 40px/1.15 var(--serif);letter-spacing:-.01em;margin:0 0 10px}
+header.plan .sub{font-size:17px;color:var(--ink-2);margin:0 0 20px;max-width:60ch}
+.meta{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;font-size:13px;color:var(--ink-3);padding:14px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.meta b{color:var(--ink-2);font-weight:500}
+
+/* ---- sections ---- */
+section{padding-top:56px;counter-reset:step}
+section h2{display:flex;align-items:baseline;gap:14px;font:600 13px/1 var(--sans);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2);margin:0 0 20px;padding-bottom:10px;border-bottom:1px solid var(--line)}
+section h2 .n{font:400 20px/1 var(--serif);color:var(--blue);letter-spacing:0}
+h3{font:600 16px/1.35 var(--sans);margin:28px 0 8px}
+p{margin:0 0 14px;max-width:70ch}
+ul,ol{padding-left:22px;margin:0 0 14px}li{margin:4px 0}
+hr{border:0;border-top:1px solid var(--line);margin:28px 0}
+.lede{font-size:17px;line-height:1.55}
+.muted{color:var(--ink-3)}
+
+/* ---- callout ---- */
+.callout{display:grid;grid-template-columns:auto 1fr;gap:14px;padding:16px 18px;border-radius:8px;background:var(--surface);border:1px solid var(--line);margin:18px 0}
+.callout .k{font:600 11px/1.6 var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);padding-top:3px;white-space:nowrap}
+.callout p:last-child{margin:0}
+.callout.decision{background:var(--blue-soft);border-color:var(--blue-line)}.callout.decision .k{color:var(--blue-ink)}
+.callout.warn{background:var(--warn-soft);border-color:var(--warn-line)}.callout.warn .k{color:var(--warn)}
+.callout.bad{background:var(--bad-soft);border-color:var(--bad-line)}.callout.bad .k{color:var(--bad)}
+.callout.good{background:var(--good-soft);border-color:var(--good-line)}.callout.good .k{color:var(--good)}
+
+/* ---- chips & paths ---- */
+.chip{display:inline-block;font:500 11.5px/1 var(--sans);padding:5px 8px;border-radius:999px;background:var(--surface-2);color:var(--ink-2);border:1px solid var(--line);vertical-align:middle;white-space:nowrap}
+.chip.blue{background:var(--blue-soft);color:var(--blue-ink);border-color:var(--blue-line)}
+.chip.good{background:var(--good-soft);color:var(--good);border-color:var(--good-line)}
+.chip.warn{background:var(--warn-soft);color:var(--warn);border-color:var(--warn-line)}
+.chip.bad{background:var(--bad-soft);color:var(--bad);border-color:var(--bad-line)}
+.path{display:inline-block;font:12.5px/1.5 var(--mono);background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:1px 6px;color:var(--ink-2)}
+.path.new{border-style:dashed}
+
+/* ---- tables ---- */
+table{width:100%;border-collapse:collapse;font-size:14px;margin:14px 0 22px}
+th{font:600 11.5px/1.4 var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);text-align:left;padding:8px 12px 8px 0;border-bottom:1px solid var(--line-2)}
+td{padding:11px 12px 11px 0;border-bottom:1px solid var(--line);vertical-align:top;color:var(--ink-2)}
+td:first-child{color:var(--ink);font-weight:500}
+tr.chosen td{background:var(--blue-soft)}
+tr.chosen td:first-child{color:var(--blue-ink);box-shadow:inset 3px 0 0 var(--blue);padding-left:10px}
+tr.chosen td:last-child{padding-right:10px}
+
+/* ---- steps ---- */
+.steps{list-style:none;padding:0;margin:0}
+.step{counter-increment:step;display:grid;grid-template-columns:44px 1fr;gap:0 18px;padding:22px 0;border-top:1px solid var(--line)}
+.step:last-child{border-bottom:1px solid var(--line)}
+.step::before{content:counter(step,decimal-leading-zero);font:400 26px/1 var(--serif);color:var(--blue);padding-top:2px}
+.step h3{margin:0 0 6px;font-size:16.5px}
+.step .facts{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12.5px;color:var(--ink-3);margin:6px 0 10px}
+.step .facts b{color:var(--ink-2);font-weight:500}
+.step p{margin:0 0 8px}
+.step .files{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 0}
+.step .verify{font-size:13.5px;color:var(--ink-2);border-left:2px solid var(--line-2);padding-left:12px;margin-top:12px}
+.step .verify b{color:var(--ink-3);font:600 11px var(--sans);letter-spacing:.08em;text-transform:uppercase;margin-right:8px}
+
+/* ---- phases ---- */
+.phase{margin:34px 0 8px;display:flex;align-items:baseline;gap:12px}
+.phase b{font:600 12px var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
+.phase span{color:var(--ink-2);font-size:14px}
+
+/* ---- timeline ---- */
+.timeline{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;margin:22px 0 26px;position:relative}
+.timeline::before{content:"";position:absolute;left:0;right:0;top:5px;height:1px;background:var(--line-2)}
+.timeline>div{position:relative;padding:20px 14px 0 0;font-size:13.5px}
+.timeline>div::before{content:"";position:absolute;top:0;left:0;width:11px;height:11px;border-radius:50%;background:var(--bg);border:2px solid var(--line-2)}
+.timeline>div.now::before{background:var(--blue);border-color:var(--blue)}
+.timeline>div.done::before{background:var(--ink-3);border-color:var(--ink-3)}
+.timeline .when{font:500 11px var(--mono);color:var(--ink-3);margin-bottom:3px}
+.timeline b{display:block;font-weight:600;margin-bottom:2px}
+.timeline p{margin:0;color:var(--ink-2);font-size:13px}
+
+/* ---- figures & diagrams ---- */
+figure{margin:20px 0 26px;padding:22px 20px 14px;background:var(--paper);border:1px solid var(--line);border-radius:8px}
+figcaption{font-size:12.5px;color:var(--ink-3);margin-top:12px;text-align:center}
+pre.mermaid{display:flex;justify-content:center;background:none;border:0;padding:0;margin:0;font:inherit;white-space:normal}
+pre.mermaid svg{max-width:100%;height:auto}
+body.no-mermaid pre.mermaid{white-space:pre;font:12.5px/1.5 var(--mono);color:var(--ink-2);justify-content:flex-start}
+body.no-mermaid pre.mermaid::before{content:"Mermaid source (offline — diagram not rendered)";display:block;font:600 11px var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);margin-bottom:8px}
+svg.diagram{width:100%;height:auto;display:block;font:13px var(--sans);color:var(--ink-2)}
+svg.diagram .box{fill:var(--surface);stroke:var(--line-2);stroke-width:1.2}
+svg.diagram .box.hot{fill:var(--blue-soft);stroke:var(--blue)}
+svg.diagram text{fill:var(--ink)}
+svg.diagram .lbl{fill:var(--ink-3);font-size:11px}
+svg.diagram .edge{stroke:var(--ink-3);stroke-width:1.3;fill:none;marker-end:url(#arrow)}
+
+/* ---- checklist ---- */
+.checks{list-style:none;padding:0;margin:0 0 18px}
+.checks li{display:grid;grid-template-columns:18px 1fr;gap:12px;padding:8px 0;border-bottom:1px solid var(--line);margin:0}
+.checks li::before{content:"";width:14px;height:14px;border:1.5px solid var(--line-2);border-radius:3px;margin-top:5px}
+.checks li.done::before{background:var(--good);border-color:var(--good)}
+
+/* ---- key/value ---- */
+.kv{display:grid;grid-template-columns:max-content 1fr;gap:6px 20px;font-size:14px;margin:12px 0 18px}
+.kv dt{color:var(--ink-3)}.kv dd{margin:0;color:var(--ink-2)}
+
+/* ---- bars (pure CSS, set --w) ---- */
+.bars{display:grid;gap:8px;margin:14px 0 22px;font-size:13px}
+.bars>div{display:grid;grid-template-columns:120px 1fr 56px;align-items:center;gap:12px}
+.bars .bar{height:8px;background:var(--surface-2);border-radius:4px;overflow:hidden}
+.bars .bar i{display:block;height:100%;width:var(--w);background:var(--blue)}
+.bars .val{text-align:right;color:var(--ink-3);font-family:var(--mono);font-size:12px}
+
+footer{margin-top:80px;padding-top:18px;border-top:1px solid var(--line);font-size:12px;color:var(--ink-3);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+
+/* ---- responsive / print ---- */
+@media (max-width:900px){
+  .page{grid-template-columns:1fr;padding:0 20px}
+  nav.toc{position:static;height:auto;border:0;padding:28px 0 0}
+  main{padding-left:0}
+  header.plan h1{font-size:32px}
+  .timeline{grid-auto-flow:row;gap:10px}.timeline::before{display:none}
+  .bars>div{grid-template-columns:90px 1fr 48px}
+}
+@media print{
+  nav.toc{display:none}.page{grid-template-columns:1fr;max-width:none}
+  main{padding-left:0;max-width:none}
+  section{break-inside:avoid-page}figure,.step,table{break-inside:avoid}
+  body{font-size:12.5px}a{color:inherit}
+}
+</style>
+<!-- Per-plan design overrides. Fill ONLY when the user asked for a design change
+     on this plan (e.g. "make it dark", "denser"). Otherwise leave empty. -->
+<style id="custom"></style>
+</head>
+<body>
+<div class="page">
+<nav class="toc" aria-label="Contents">
+  <div class="brand">Blueprint</div>
+  <ol id="toc"></ol>
+</nav>
+
+<main>
+<header class="plan">
+  <h1>Add rate limiting to the public API</h1>
+  <p class="sub">Stop a single API key from starving everyone else, without adding infrastructure or breaking well-behaved clients.</p>
+  <div class="meta">
+    <span><b>Sep 24, 2026</b></span>
+    <span>uppi-order-portal · <code>main</code></span>
+    <span class="chip blue">Proposal</span>
+    <span class="chip">Scope · M</span>
+    <span>6 steps · ~3 days</span>
+  </div>
+</header>
+
+<section id="summary">
+  <h2><span class="n">01</span>Summary</h2>
+  <p class="lede">Three times this month one integration partner's retry loop pushed p99 latency past 4s for every tenant. Nothing in the API says no. This plan adds a per-key token-bucket limiter as Express middleware, ships it in log-only mode for two days to calibrate, then enforces with a <code>429</code> and <code>Retry-After</code>. No new services; the limiter lives in-process and the limits live in the existing config table.</p>
+  <div class="callout decision">
+    <div class="k">Decision needed</div>
+    <p>Approve the in-process limiter over a Redis-backed one. In-process means limits are per instance (3× the nominal number across our three replicas), which is acceptable for the abuse case we actually have. Redis is the upgrade path if we ever need exact global limits.</p>
+  </div>
+</section>
+
+<section id="context">
+  <h2><span class="n">02</span>Context</h2>
+  <p>The public API is a single Express app behind the load balancer, three replicas, sticky sessions off. Authentication resolves an API key to a tenant in <code>authenticate()</code> and attaches it to <code>req.tenant</code>. From there every route is unmetered. The incident on Sep 18 was 41k requests in four minutes from one key, all retries of a failing <code>POST /orders</code>.</p>
+  <h3>What I found</h3>
+  <ul>
+    <li>Auth middleware already resolves key → tenant before routing, so there's a clean place to hang a limiter — <span class="path">src/api/middleware/authenticate.ts</span></li>
+    <li>Per-tenant settings already live in a <code>tenant_config</code> table with a JSON <code>settings</code> column; no migration needed for limits — <span class="path">src/db/schema/tenant_config.ts</span></li>
+    <li>Request logging emits one structured line per request with <code>tenant_id</code>; enough to calibrate limits from existing logs — <span class="path">src/api/middleware/requestLog.ts</span></li>
+    <li>No existing <code>429</code> handling in the SDK; clients would see it as a generic error today — <span class="path">packages/sdk/src/client.ts</span></li>
+  </ul>
+  <dl class="kv">
+    <dt>Constraints</dt><dd>No new infrastructure this quarter. Zero-downtime deploy. Must not affect the two partners on legacy keys without notice.</dd>
+    <dt>Out of scope</dt><dd>Per-route quotas, billing tiers, the admin UI for editing limits. Limits are edited via the existing config CLI.</dd>
+  </dl>
+</section>
+
+<section id="approach">
+  <h2><span class="n">03</span>Approach</h2>
+  <p>A token bucket per API key, held in process memory, refilled on a timer. It sits directly after <code>authenticate()</code> so it has the tenant but runs before any handler or database work. When the bucket is empty it answers <code>429</code> with a <code>Retry-After</code> header instead of forwarding. A per-tenant override in <code>tenant_config.settings.rateLimit</code> beats the global default. A <code>RATE_LIMIT_MODE=log</code> flag makes it observe-only so we can size the limits on real traffic before anything is blocked.</p>
+  <figure>
+    <pre class="mermaid">
+flowchart LR
+  C[Client] --> LB[Load balancer]
+  LB --> A["authenticate()"]
+  A --> L["rateLimit()<br/>(new)"]
+  L -->|allowed| H[Route handlers]
+  L -->|"429 + Retry-After"| C
+  H --> DB[(Postgres)]
+  CFG[(tenant_config)] -.limits.-> L
+  subgraph proc["API process ×3"]
+    A
+    L
+    H
+  end
+    </pre>
+    <figcaption>The limiter runs after auth and before any handler. Limits come from the existing tenant config.</figcaption>
+  </figure>
+  <h3>Options considered</h3>
+  <table>
+    <thead><tr><th>Option</th><th>For</th><th>Against</th><th>Verdict</th></tr></thead>
+    <tbody>
+      <tr class="chosen"><td>In-process token bucket</td><td>No new infra; ~200 lines; ships this week</td><td>Limits are per replica, so effective limit is 3× nominal</td><td><span class="chip blue">Chosen</span></td></tr>
+      <tr><td>Redis-backed counter</td><td>Exact global limits; shared across replicas</td><td>New dependency and failure mode; Redis isn't in the stack</td><td>Upgrade path if per-replica proves too loose</td></tr>
+      <tr><td>Limit at the load balancer</td><td>No application code</td><td>LB only sees IPs, not API keys; partners share egress IPs</td><td>Rejected</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="steps">
+  <h2><span class="n">04</span>Steps</h2>
+  <div class="timeline">
+    <div class="done"><div class="when">Done</div><b>Incident review</b><p>Traffic sampled, offender identified.</p></div>
+    <div class="now"><div class="when">Now</div><b>Proposal</b><p>This page.</p></div>
+    <div><div class="when">Day 1–2</div><b>Build</b><p>Middleware, config, tests.</p></div>
+    <div><div class="when">Day 3–4</div><b>Observe</b><p>Log-only in production.</p></div>
+    <div><div class="when">Day 5</div><b>Enforce</b><p>Flip to block; notify partners.</p></div>
+  </div>
+
+  <div class="phase"><b>Phase 1</b><span>Build and land behind a flag</span></div>
+  <ol class="steps">
+    <li class="step">
+      <div>
+        <h3>Write the token-bucket limiter</h3>
+        <div class="facts"><span><b>Effort</b> M</span><span><b>Depends on</b> —</span><span><b>Risk</b> low</span></div>
+        <p>A <code>Map&lt;apiKey, Bucket&gt;</code> with capacity and refill rate, pruned every five minutes so idle keys don't leak memory. Pure function core so it's trivially testable; the middleware wrapper is thin.</p>
+        <div class="files"><span class="path new">src/api/middleware/rateLimit.ts</span><span class="path new">src/api/middleware/rateLimit.test.ts</span></div>
+        <div class="verify"><b>Verify</b>Unit tests: 61st request in a minute at 60/min is rejected; bucket refills at the configured rate; idle keys are pruned.</div>
+      </div>
+    </li>
+    <li class="step">
+      <div>
+        <h3>Read limits from tenant config with a global default</h3>
+        <div class="facts"><span><b>Effort</b> S</span><span><b>Depends on</b> Step 1</span><span><b>Risk</b> low</span></div>
+        <p>Global default from <code>RATE_LIMIT_PER_MIN</code> (env, default 60). Per-tenant override at <code>settings.rateLimit.perMinute</code>, already loaded on <code>req.tenant</code> by auth, so no extra query.</p>
+        <div class="files"><span class="path">src/config/env.ts</span><span class="path">src/db/schema/tenant_config.ts</span><span class="path">src/api/middleware/rateLimit.ts</span></div>
+        <div class="verify"><b>Verify</b>Test: tenant with override 600/min is not limited at 100 req/min; tenant without override is.</div>
+      </div>
+    </li>
+    <li class="step">
+      <div>
+        <h3>Mount after auth, with a log-only mode</h3>
+        <div class="facts"><span><b>Effort</b> S</span><span><b>Depends on</b> Step 2</span><span><b>Risk</b> medium</span></div>
+        <p><code>RATE_LIMIT_MODE=off|log|enforce</code>. In <code>log</code>, the middleware records what it <em>would</em> have done to the request log and passes through. Ships with <code>off</code>; flipped per environment.</p>
+        <div class="files"><span class="path">src/api/app.ts</span><span class="path">src/api/middleware/requestLog.ts</span></div>
+        <div class="verify"><b>Verify</b>Integration test hits the app in each mode and asserts pass-through vs 429. Log line includes <code>rate_limit.decision</code>.</div>
+      </div>
+    </li>
+  </ol>
+
+  <div class="phase"><b>Phase 2</b><span>Calibrate, then enforce</span></div>
+  <ol class="steps">
+    <li class="step">
+      <div>
+        <h3>Run log-only in production for 48 hours</h3>
+        <div class="facts"><span><b>Effort</b> S</span><span><b>Depends on</b> Phase 1 deployed</span><span><b>Risk</b> low</span></div>
+        <p>Query the request log for would-be rejections per tenant. Anyone legitimately over 60/min gets a tenant override before enforcement. Target: zero would-be rejections for known-good tenants.</p>
+        <div class="files"><span class="path">ops/queries/rate_limit_calibration.sql</span></div>
+        <div class="verify"><b>Verify</b>Calibration query returns only the known offender above the threshold.</div>
+      </div>
+    </li>
+    <li class="step">
+      <div>
+        <h3>Teach the SDK to honour Retry-After</h3>
+        <div class="facts"><span><b>Effort</b> S</span><span><b>Depends on</b> —</span><span><b>Risk</b> low</span></div>
+        <p>On <code>429</code>, the SDK sleeps for <code>Retry-After</code> seconds (capped at 30) before retrying, instead of hammering. Released before enforcement so partners on the current SDK behave well by default.</p>
+        <div class="files"><span class="path">packages/sdk/src/client.ts</span><span class="path">packages/sdk/CHANGELOG.md</span></div>
+        <div class="verify"><b>Verify</b>SDK test: a 429 with <code>Retry-After: 2</code> delays the next attempt by ≥2s.</div>
+      </div>
+    </li>
+    <li class="step">
+      <div>
+        <h3>Flip to enforce and notify partners</h3>
+        <div class="facts"><span><b>Effort</b> S</span><span><b>Depends on</b> Steps 4, 5</span><span><b>Risk</b> medium</span></div>
+        <p>Set <code>RATE_LIMIT_MODE=enforce</code> in production. Email the two legacy-key partners 24h ahead with their limit and the SDK version. Keep <code>log</code> as the one-line rollback.</p>
+        <div class="files"><span class="path">infra/env/production.env</span><span class="path new">docs/api/rate-limits.md</span></div>
+        <div class="verify"><b>Verify</b>p99 latency stays under 800ms through the next partner retry storm; 429 count matches calibration prediction ±10%.</div>
+      </div>
+    </li>
+  </ol>
+</section>
+
+<section id="risks">
+  <h2><span class="n">05</span>Risks &amp; open questions</h2>
+  <table>
+    <thead><tr><th>Risk</th><th>Likelihood</th><th>Impact</th><th>Mitigation</th></tr></thead>
+    <tbody>
+      <tr><td>A legitimate burst gets throttled</td><td><span class="chip warn">Medium</span></td><td><span class="chip warn">Medium</span></td><td>48h log-only calibration; per-tenant overrides; default set at 2× the highest observed legitimate rate.</td></tr>
+      <tr><td>Per-replica limits are too loose to stop the abuse</td><td><span class="chip good">Low</span></td><td><span class="chip warn">Medium</span></td><td>Set the nominal limit at ⅓ of the intended global limit. If still insufficient, the Redis option is a drop-in behind the same interface.</td></tr>
+      <tr><td>Memory growth from many distinct keys</td><td><span class="chip good">Low</span></td><td><span class="chip good">Low</span></td><td>Five-minute prune of idle buckets; we have ~400 active keys, ~100 bytes each.</td></tr>
+    </tbody>
+  </table>
+  <h3>Open questions</h3>
+  <ul class="checks">
+    <li>Is 60 req/min the right global default, or should it be derived from the calibration query?</li>
+    <li>Should <code>POST /orders</code> get a stricter limit than reads, or is one number per key enough for now?</li>
+    <li class="done">Do we need a migration for tenant limits? No — <code>tenant_config.settings</code> is JSON.</li>
+  </ul>
+</section>
+
+<section id="verification">
+  <h2><span class="n">06</span>Verification</h2>
+  <p>Done means the incident can't recur, not that the code merged.</p>
+  <ul class="checks">
+    <li>Replay the Sep 18 traffic shape in staging; p99 for other tenants stays under 800ms.</li>
+    <li>All unit and integration tests green; <code>npm test</code> in <span class="path">src/api</span> and <span class="path">packages/sdk</span>.</li>
+    <li>Calibration query shows zero would-be rejections for known-good tenants before enforcement.</li>
+    <li>Partners acknowledged the notice; SDK release published.</li>
+    <li>Rollback rehearsed: flipping to <code>log</code> takes effect within one deploy.</li>
+  </ul>
+</section>
+
+<section id="next">
+  <h2><span class="n">07</span>Next</h2>
+  <div class="callout decision">
+    <div class="k">On approval</div>
+    <p>Start with Step 1 on a branch <code>feat/rate-limit</code>. The limiter core and its tests are the first PR; Steps 2–3 follow in a second PR the same day so the whole of Phase 1 can deploy to staging by end of day 2.</p>
+  </div>
+</section>
+
+<footer>
+  <span>Blueprint · generated by Claude Code · Sep 24, 2026 22:58</span>
+  <span>~/.blueprint/2026-09-24-add-rate-limiting.html</span>
+</footer>
+</main>
+</div>
+
+<script>
+// Build the table of contents from section h2s and highlight on scroll.
+(function(){
+  var toc=document.getElementById('toc');
+  var secs=[].slice.call(document.querySelectorAll('main section[id]'));
+  secs.forEach(function(s){
+    var h=s.querySelector('h2'); if(!h) return;
+    var nEl=h.querySelector('.n'); var n=nEl?nEl.textContent:'';
+    var t=h.textContent.replace(n,'').trim();
+    var li=document.createElement('li');
+    var a=document.createElement('a'); a.href='#'+s.id;
+    var sn=document.createElement('span'); sn.className='n'; sn.textContent=n;
+    var st=document.createElement('span'); st.textContent=t;
+    a.appendChild(sn); a.appendChild(st); li.appendChild(a); toc.appendChild(li);
+  });
+  var links=[].slice.call(toc.querySelectorAll('a'));
+  if('IntersectionObserver' in window){
+    var io=new IntersectionObserver(function(es){
+      es.forEach(function(e){ if(e.isIntersecting){
+        links.forEach(function(l){ l.classList.toggle('active', l.hash==='#'+e.target.id); });
+      }});
+    },{rootMargin:'-15% 0px -75% 0px'});
+    secs.forEach(function(s){ io.observe(s); });
+  }
+  if(links[0]) links[0].classList.add('active');
+})();
+</script>
+<script type="module">
+// Mermaid from CDN; if offline, show the source instead of a broken box.
+try{
+  const m=(await import('https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs')).default;
+  m.initialize({
+    startOnLoad:false, securityLevel:'loose', theme:'base',
+    fontFamily:'-apple-system, BlinkMacSystemFont, Inter, "Segoe UI", sans-serif',
+    themeVariables:{
+      fontSize:'13px',
+      primaryColor:'#E8EDFB', primaryBorderColor:'#2451D6', primaryTextColor:'#1E1D1A',
+      secondaryColor:'#F4F3EE', secondaryBorderColor:'#CFCDC3', secondaryTextColor:'#1E1D1A',
+      tertiaryColor:'#FBFBF9', tertiaryBorderColor:'#E2E0D8', tertiaryTextColor:'#55534C',
+      lineColor:'#8E8C83', textColor:'#1E1D1A', mainBkg:'#F4F3EE', nodeBorder:'#CFCDC3',
+      clusterBkg:'#FBFBF9', clusterBorder:'#E2E0D8', edgeLabelBackground:'#FFFFFF',
+      actorBkg:'#F4F3EE', actorBorder:'#CFCDC3', actorTextColor:'#1E1D1A', actorLineColor:'#CFCDC3',
+      signalColor:'#55534C', signalTextColor:'#1E1D1A', noteBkgColor:'#FBF0DC', noteBorderColor:'#EED9B0',
+      activationBkgColor:'#E8EDFB', activationBorderColor:'#2451D6',
+      sectionBkgColor:'#F4F3EE', altSectionBkgColor:'#FBFBF9', taskBkgColor:'#E8EDFB', taskBorderColor:'#2451D6',
+      taskTextColor:'#1E1D1A', taskTextDarkColor:'#1E1D1A', activeTaskBkgColor:'#2451D6', activeTaskBorderColor:'#1A3CA8',
+      doneTaskBkgColor:'#ECEAE2', doneTaskBorderColor:'#CFCDC3', gridColor:'#E2E0D8', todayLineColor:'#B23A32'
+    }
+  });
+  await m.run({querySelector:'pre.mermaid'});
+}catch(e){ document.body.classList.add('no-mermaid'); }
+</script>
+</body>
+</html>
