@@ -7,7 +7,7 @@ You still work in the terminal. But when the agent says "here's my plan," instea
 ## Install
 
 ```sh
-git clone <this repo> ~/Projects/blueprint
+git clone https://github.com/dannyhamam/blueprint.git ~/Projects/blueprint
 cd ~/Projects/blueprint && ./install.sh
 ```
 
