@@ -190,7 +190,7 @@ flowchart LR
 </div>
 ```
 
-The template's script shows one figure at a time and adds previous and next buttons with a `1 / 2` counter. The left and right arrow keys work when the carousel has focus. Each slide is a complete `figure` with its own caption; in Overview the change map comes first. Without JavaScript the figures stack, and print shows every slide. Inactive slides stay laid out but hidden, so Mermaid diagrams render at the correct size.
+The template's script lays the figures side by side at full content width and shows one at a time. Round previous and next buttons sit on the left and right edges of the visual, and a `1 / 2` counter sits below. Switching slides animates horizontally, and the height eases to fit the new slide, so slides can differ in height. The left and right arrow keys work when the carousel has focus. Each slide is a complete `figure` with its own caption; in Overview the change map comes first. Without JavaScript the figures stack, and print shows every slide.
 
 ## Document shell
 
