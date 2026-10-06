@@ -128,6 +128,15 @@ svg.diagram .box{fill:var(--surface);stroke:var(--line-2);stroke-width:1.2}svg.d
 .change-row .row-label{font:600 10px var(--sans);color:var(--ink-3)}
 .flow-node{padding:13px 10px;border:1px solid var(--line);border-radius:7px;font-size:12px;font-weight:600;text-align:center;background:#fafbfc;line-height:1.5}.flow-node small{display:block;font-size:10px;font-weight:400;color:var(--ink-3);margin-top:3px}.flow-node.hot{background:var(--blue-soft);border-color:var(--blue-line);color:var(--blue-ink)}
 .flow-arrow{font-size:17px;color:var(--line-2);text-align:center}.change-map figcaption{border-top:1px solid var(--line);margin:0;padding:12px 22px;background:#fafbfc}
+/* Several visuals share one place; one shows at a time. Without JS they stack. */
+.carousel{margin:0 0 22px}.carousel:focus-visible{outline-offset:6px;border-radius:12px}
+.carousel.is-ready .slides{position:relative;overflow:hidden}
+.carousel.is-ready .slides>figure{margin:0}
+.carousel.is-ready .slides>figure:not(.is-active){position:absolute;inset:0 0 auto 0;visibility:hidden;pointer-events:none}
+.carousel-controls{display:flex;align-items:center;justify-content:flex-end;gap:10px;margin-top:10px;font:11px var(--mono);color:var(--ink-3)}
+.carousel-controls button{width:32px;height:32px;padding:0;border:1px solid var(--line-2);border-radius:7px;background:var(--paper);color:var(--ink-2);font-size:15px;line-height:1}
+.carousel-controls button:hover:not(:disabled){border-color:var(--blue);color:var(--blue)}
+.carousel-controls button:disabled{opacity:.4;cursor:default}
 .checks,.questions{list-style:none;padding:0;margin:0 0 20px}.checks li,.questions li{position:relative;padding:16px 16px 16px 42px;border-bottom:1px solid var(--line);margin:0;font-size:13px}
 .checks li{cursor:pointer}.checks li:hover{background:var(--paper)}
 .checks li::before{content:"";position:absolute;left:10px;top:20px;width:16px;height:16px;border:1.5px solid var(--line-2);border-radius:4px;color:#fff;font-size:11px;font-weight:700;line-height:13px;text-align:center}
@@ -152,7 +161,7 @@ svg.diagram .box{fill:var(--surface);stroke:var(--line-2);stroke-width:1.2}svg.d
 }
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important}}
 @media print{
- @page{margin:16mm}body{background:#fff;font-size:11px}.page{padding:0}nav.toc,.document-bar,.skip-link{display:none}main{padding:0;max-width:none}header.plan h1{font-size:32px}section{padding-top:24px}section h2{break-after:avoid}figure,.step,.callout,tr{break-inside:avoid}.table-scroll{overflow:visible}table{font-size:10px}a{color:inherit}.callout,.chip,.flow-node{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+ @page{margin:16mm}body{background:#fff;font-size:11px}.page{padding:0}nav.toc,.document-bar,.skip-link{display:none}main{padding:0;max-width:none}header.plan h1{font-size:32px}section{padding-top:24px}section h2{break-after:avoid}figure,.step,.callout,tr{break-inside:avoid}.carousel.is-ready .slides{overflow:visible}.carousel.is-ready .slides>figure{margin:0 0 16px}.carousel.is-ready .slides>figure:not(.is-active){position:static;visibility:visible}.carousel-controls{display:none}.table-scroll{overflow:visible}table{font-size:10px}a{color:inherit}.callout,.chip,.flow-node{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
 </style>
 <!-- Per-plan design overrides. Fill ONLY when the user asked for a design change
@@ -284,6 +293,38 @@ document.querySelectorAll('main table').forEach(function(table){
   wrapper.tabIndex=0; wrapper.setAttribute('role','region');
   wrapper.setAttribute('aria-label', table.closest('section').querySelector('h2').textContent.replace(/^\d+/, '').trim()+' table');
   table.before(wrapper); wrapper.appendChild(table);
+});
+// Carousels show one visual at a time; buttons and arrow keys move between them.
+document.querySelectorAll('.carousel').forEach(function(carousel){
+  var slides=[].slice.call(carousel.querySelectorAll(':scope > .slides > figure'));
+  if(slides.length<2) return;
+  var index=0;
+  function button(text,label){
+    var b=document.createElement('button'); b.type='button'; b.textContent=text;
+    b.setAttribute('aria-label',label); return b;
+  }
+  var prev=button('←','Previous visual'), next=button('→','Next visual');
+  var count=document.createElement('span'); count.setAttribute('aria-live','polite');
+  var controls=document.createElement('div'); controls.className='carousel-controls';
+  controls.append(prev,count,next); carousel.appendChild(controls);
+  carousel.classList.add('is-ready'); carousel.tabIndex=0;
+  carousel.setAttribute('role','region'); carousel.setAttribute('aria-roledescription','carousel');
+  if(!carousel.hasAttribute('aria-label')) carousel.setAttribute('aria-label','Visuals');
+  function show(i){
+    index=Math.max(0,Math.min(slides.length-1,i));
+    slides.forEach(function(slide,n){ slide.classList.toggle('is-active',n===index); });
+    count.textContent=(index+1)+' / '+slides.length;
+    prev.disabled=index===0; next.disabled=index===slides.length-1;
+    if(document.activeElement===prev&&prev.disabled) next.focus();
+    if(document.activeElement===next&&next.disabled) prev.focus();
+  }
+  prev.addEventListener('click',function(){ show(index-1); });
+  next.addEventListener('click',function(){ show(index+1); });
+  carousel.addEventListener('keydown',function(e){
+    if(e.key==='ArrowLeft'){ e.preventDefault(); show(index-1); }
+    else if(e.key==='ArrowRight'){ e.preventDefault(); show(index+1); }
+  });
+  show(0);
 });
 // Expand supporting files for print, then restore the reader's view.
 var printDetails=[];
