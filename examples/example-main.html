@@ -4,19 +4,26 @@
   <p class="sub">Stop a single API key from starving everyone else, without adding infrastructure or breaking well-behaved clients.</p>
   <div class="meta">
     <span><b>Sep 24, 2026</b></span>
-    <span>uppi-order-portal · <code>main</code></span>
-    <span class="chip blue">Proposal</span>
-    <span class="chip">Scope · M</span>
-    <span>6 steps · ~3 days</span>
+    <span>uppi-order-portal</span>
   </div>
 </header>
 
 <section id="summary">
   <h2><span class="n">01</span>Summary</h2>
+  <figure>
+    <pre class="mermaid">
+flowchart LR
+  P[Noisy partner] --> G["Rate limit<br/>(new)"]
+  O[Other tenants] --> G
+  G -->|within limit| API[API]
+  G -->|"over limit: 429"| P
+    </pre>
+    <figcaption>Today every request reaches the API. After, each key gets a budget and over-budget requests are told to retry later.</figcaption>
+  </figure>
   <p class="lede">Three times this month one integration partner's retry loop pushed p99 latency past 4s for every tenant. Nothing in the API says no. This plan adds a per-key token-bucket limiter as Express middleware, ships it in log-only mode for two days to calibrate, then enforces with a <code>429</code> and <code>Retry-After</code>. No new services; the limiter lives in-process and the limits live in the existing config table.</p>
   <div class="callout decision">
     <div class="k">Decision needed</div>
-    <p>Approve the in-process limiter over a Redis-backed one. In-process means limits are per instance (3× the nominal number across our three replicas), which is acceptable for the abuse case we actually have. Redis is the upgrade path if we ever need exact global limits.</p>
+    <p>Approve the in-process limiter over a Redis-backed one. In-process means limits are per instance (3× the nominal number across our three replicas), which is acceptable for the abuse case we actually have. Redis is the upgrade path if we ever need exact global limits. On approval, Step 1 starts on <code>feat/rate-limit</code>.</p>
   </div>
 </section>
 
@@ -70,14 +77,6 @@ flowchart LR
 
 <section id="steps">
   <h2><span class="n">04</span>Steps</h2>
-  <div class="timeline">
-    <div class="done"><div class="when">Done</div><b>Incident review</b><p>Traffic sampled, offender identified.</p></div>
-    <div class="now"><div class="when">Now</div><b>Proposal</b><p>This page.</p></div>
-    <div><div class="when">Day 1–2</div><b>Build</b><p>Middleware, config, tests.</p></div>
-    <div><div class="when">Day 3–4</div><b>Observe</b><p>Log-only in production.</p></div>
-    <div><div class="when">Day 5</div><b>Enforce</b><p>Flip to block; notify partners.</p></div>
-  </div>
-
   <div class="phase"><b>Phase 1</b><span>Build and land behind a flag</span></div>
   <ol class="steps">
     <li class="step">
@@ -161,22 +160,10 @@ flowchart LR
 
 <section id="verification">
   <h2><span class="n">06</span>Verification</h2>
-  <p>Done means the incident can't recur, not that the code merged.</p>
   <ul class="checks">
     <li>Replay the Sep 18 traffic shape in staging; p99 for other tenants stays under 800ms.</li>
-    <li>All unit and integration tests green; <code>npm test</code> in <span class="path">src/api</span> and <span class="path">packages/sdk</span>.</li>
-    <li>Calibration query shows zero would-be rejections for known-good tenants before enforcement.</li>
     <li>Partners acknowledged the notice; SDK release published.</li>
-    <li>Rollback rehearsed: flipping to <code>log</code> takes effect within one deploy.</li>
   </ul>
-</section>
-
-<section id="next">
-  <h2><span class="n">07</span>Next</h2>
-  <div class="callout decision">
-    <div class="k">On approval</div>
-    <p>Start with Step 1 on a branch <code>feat/rate-limit</code>. The limiter core and its tests are the first PR; Steps 2–3 follow in a second PR the same day so the whole of Phase 1 can deploy to staging by end of day 2.</p>
-  </div>
 </section>
 
 <footer>

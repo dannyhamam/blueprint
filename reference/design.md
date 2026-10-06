@@ -23,20 +23,20 @@ The design lives in `templates/plan.html`. Change it there, once, and every futu
 ## Type
 
 - Headline: `Charter, Iowan Old Style, Palatino, Georgia, serif` at 40px. Charter and Iowan ship with macOS; Georgia is on everything else. No web fonts, no network.
-- Section numbers (`01`…`07`) and step numbers: same serif, 20px and 26px, in blue. This is the one flourish.
+- Section numbers (`01`…`06`) and step numbers: same serif, 20px and 26px, in blue. This is the one flourish.
 - Everything else: system sans at 15.5px / 1.6. Section titles are 13px uppercase tracked, so the eye reads the number first and the title second.
 - Paths, code, timeline dates: system mono.
 
 ## Layout
 
-- Two columns: 232px sticky table of contents, 740px content, 56px gutter. The TOC is generated from the section `h2`s and highlights on scroll.
+- 232px table of contents pinned to the left edge; 740px content column centered in the viewport, pushed right only when the screen is too narrow to clear the sidebar. The TOC is generated from the section `h2`s and highlights on scroll.
 - Sections are separated by 56px of air and a hairline under the title, never by boxes.
 - Content max-width 70ch for prose so lines stay readable; tables and figures use the full 740px.
 - Below 900px the TOC moves above the content and timelines stack. Print drops the TOC and avoids breaking inside steps, figures, and tables.
 
 ## Where blue is allowed
 
-Exactly: chosen option row, current timeline dot, active TOC entry, decision/on-approval callouts, links, step and section numbers, the `Proposal` status chip. If you find yourself adding blue anywhere else, you're decorating.
+Exactly: chosen option row, current timeline dot, active TOC entry, decision callouts, links, step and section numbers. If you find yourself adding blue anywhere else, you're decorating.
 
 ## Changing the design
 
