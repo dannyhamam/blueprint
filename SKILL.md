@@ -17,7 +17,7 @@ A plan in the terminal is a wall of monospace. Blueprint is the same plan, laid 
 
 1. **Finish the plan first.** Do the investigation, read the code, decide the approach. The page renders a finished plan; it is not a drafting surface.
 2. **Copy the template.** Read `templates/plan.html` and fill the `<main>` block. Leave the `<style>` block untouched. Every `{{placeholder}}` is either filled or its element is deleted; never ship a literal `{{…}}`.
-3. **Visual first.** Open Overview with a diagram of the change: before and after, or where the new piece sits. Use the template’s `.change-map` for a simple before/after comparison, or Mermaid / inline SVG when the relationship needs it. Plain words, six nodes or fewer, no file names. Add a technical diagram in Solution only when it shows something the Overview visual doesn't. Pick types per [reference/diagrams.md](reference/diagrams.md).
+3. **Visual first.** Open Overview with a diagram of the change: before and after, or where the new piece sits. Use the template’s `.change-map` for a simple before/after comparison, or Mermaid / inline SVG when the relationship needs it. Plain words, six nodes or fewer, no file names. Add a technical diagram in Solution only when it shows something the Overview visual doesn't. Pick types per [reference/diagrams.md](reference/diagrams.md). One visual per place is the default. When another visual genuinely helps the reader, put them together in a `.carousel` so one shows at a time; never add visuals to fill it.
 4. **Write the file** to `~/.blueprint/<YYYY-MM-DD>-<slug>.html` (`mkdir -p ~/.blueprint`). Slug is 2–5 lowercase words from the title, hyphenated. Never write into the project directory unless the user explicitly asks for a path; then use exactly that path.
 5. **Open it.** `open "$file"` on macOS, `xdg-open "$file"` on Linux. If there is no display (SSH, CI, container), skip and print the path.
 6. **Terminal summary.** After opening, print at most eight lines: title, one-line goal, step count and effort, the decision needed, the file path. Do not repeat the full plan in the terminal; the page is the plan.
@@ -39,7 +39,7 @@ In “What changes,” follow runtime call order from the user action or request
 
 Keep tests, configuration, migrations, and docs adjacent to the node they support, in optional `.related-files` disclosures. These are supporting changes, not runtime calls. Every file listed must have a stated change; existing files that only provide context should be named in the explanation instead.
 
-Use subsections inside Solution for supporting details; omit empty or repetitive material. Step facts and phases are optional. Add a technical diagram only when it adds information beyond the Overview. Keep verification as short, non-interactive statements beside the relevant file changes. Do not add a completion checklist to a plan-review page. Weave essential constraints and tradeoffs into the explanation they qualify. Ask blocking questions in chat rather than adding a separate approval block to the page.
+Use subsections inside Solution for supporting details; omit empty or repetitive material. Step facts and phases are optional. Add a technical diagram only when it adds information beyond the Overview. Two or more diagrams in the same place go in one `.carousel`, never stacked. Keep verification as short, non-interactive statements beside the relevant file changes. Do not add a completion checklist to a plan-review page. Weave essential constraints and tradeoffs into the explanation they qualify. Ask blocking questions in chat rather than adding a separate approval block to the page.
 
 Add a top-level section only when a topic needs independent review—for example, a substantial migration or rollout. Give it a descriptive title and a unique `id`. Navigation entries and sequential numbers are generated from the top-level sections present; there is no fixed list of extra tabs to fill in. Never add Context, Risks, or Verification just to complete a template.
 
@@ -63,7 +63,7 @@ The template enforces most of these. Do not fight it.
 - Headlines and body use system sans. Numbers, paths, and code use system mono. Keep the headline bold, the body calm, and labels secondary.
 - Blueprint blue connects the brand to the proposed change, chosen option, current navigation or phase, decision callouts, and links. Keep large surfaces neutral.
 - Green, amber, and red communicate status or severity; green also marks verification labels.
-- One concept per diagram. More than twelve nodes: split it.
+- One concept per diagram, and one diagram per carousel slide. More than twelve nodes: split it.
 - No emoji, gradients, stock icons, or images. The small CSS brand mark is part of the shared template.
 
 ### User-specified design requirements
@@ -75,6 +75,7 @@ If the user asks for a design change on this plan ("make it dark", "denser", "bi
 - No literal `{{` left in the file.
 - Overview and Solution are present. Any extra top-level section earns its place; each has a unique `id` and `h2`. Navigation numbers follow the section order automatically.
 - Overview opens with a before/after map or another visual of the change; each Mermaid block parses (balanced brackets, no unquoted special characters in labels).
+- A carousel appears only where two or more visuals each earn their place; in Overview the change map is its first slide.
 - Every request-flow node leads with its primary file and has a Verify line. Call order, branches, and return paths are accurate; supporting files are distinguished from runtime calls.
 - Overview and Solution read directly. No default “Decision needed” or “Scope & tradeoffs” blocks; essential constraints are explained inline.
 - Nothing in `<style id="custom">` unless the user asked.

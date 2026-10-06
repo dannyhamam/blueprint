@@ -170,6 +170,28 @@ Use the template’s `.change-map` figure when the change can be explained in tw
 
 The full pattern is in `templates/plan.html` and the rate-limiter example is in `examples/example-main.html`. It renders offline without JavaScript. Mermaid and inline SVG remain available when a simple map cannot express the plan.
 
+## Carousel (more than one visual in one place)
+
+Optional. Use it only when a second visual genuinely helps the reader, for example a request flow or class relationships beside the change map. Never add visuals to fill it. One visual needs no carousel.
+
+```html
+<div class="carousel" aria-label="Overview visuals">
+  <div class="slides">
+    <figure class="change-map" aria-label="Before and after">…</figure>
+    <figure>
+      <pre class="mermaid">
+flowchart LR
+  C[Client] --> L["Rate limiter<br/>(new)"]
+  L -->|allowed| H[Handlers]
+      </pre>
+      <figcaption>Where the limiter sits in the request path.</figcaption>
+    </figure>
+  </div>
+</div>
+```
+
+The template's script lays the figures side by side at full content width and shows one at a time. Round previous and next buttons sit on the left and right edges of the visual, and a `1 / 2` counter sits below. Switching slides animates horizontally, and the height eases to fit the new slide, so slides can differ in height. The left and right arrow keys work when the carousel has focus. Each slide is a complete `figure` with its own caption; in Overview the change map comes first. Without JavaScript the figures stack, and print shows every slide.
+
 ## Document shell
 
 Keep `<main id="main">` and the header’s `.eyebrow` when filling a plan. The sidebar, skip link, and local table-scroll wrappers come from the template. These controls navigate the document; they do not approve the proposal or run code.
