@@ -2,7 +2,7 @@
 
 A skill for terminal AI agents (Claude Code, Cursor CLI, anything that reads `SKILL.md`) that turns the plan an agent just wrote into a designed HTML page and opens it in your browser.
 
-You still work in the terminal. But when the agent says "here's my plan," instead of reading 200 lines of monospace you get a page: a diagram of the change and the decision you're being asked for at the top, then context with file references, the technical approach, numbered steps with the files each one touches, risks, and end-to-end verification. Same layout every time, so you always know where to look.
+You still work in the terminal. When the agent says “here’s my plan,” Blueprint opens a readable page with two sections: **Overview** shows what changes and why; **Solution** follows the request through the files that will change, with an explanation and check at each point. Supporting tests, configuration, and docs expand beside the relevant file. Extra sections appear only when a plan needs them.
 
 ## Install
 
@@ -27,7 +27,7 @@ Pages are written to `~/.blueprint/<date>-<slug>.html` and opened. They live out
 
 ### Design requests
 
-Per plan: "make this one dark", "denser", "bigger type". The agent puts the override in the page's `<style id="custom">` block and notes it in the footer; the structure stays the same.
+Per plan: "make this one dark", "denser", "bigger type". The agent puts the override in the page's `<style id="custom">` block and notes it in the header metadata; the structure stays the same.
 
 Permanently: edit `templates/plan.html`. Every future plan follows. Then run `python3 scripts/build-example.py` and open `examples/example-plan.html` to check the change didn't make things worse.
 
