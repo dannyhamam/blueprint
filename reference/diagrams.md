@@ -1,6 +1,18 @@
 # Diagrams
 
-Every plan gets at least one diagram in Approach: the "how the pieces fit" picture. Add more only where a second concept needs one (a rollout timeline, a request flow). One concept per diagram, twelve nodes maximum; past that, split.
+Every plan opens with a visual of the change in Summary, so the user gets the idea before any detail. Technical diagrams come later, in Approach, only when they show something the Summary visual doesn't (a request flow, a rollout timeline). One concept per diagram, twelve nodes maximum; past that, split.
+
+## The Summary visual
+
+Answers "what changes?" for someone who hasn't read the code. Before and after, or the new piece among the parts the user already knows. Six nodes or fewer, plain words, no file or function names. Usually a `flowchart LR`.
+
+```
+flowchart LR
+  P[Noisy partner] --> G["Rate limit<br/>(new)"]
+  O[Other tenants] --> G
+  G -->|within limit| API[API]
+  G -->|"over limit: 429"| P
+```
 
 Mermaid is the default. It loads from CDN when the page opens; the template already themes it to match the page, so write plain Mermaid with no `style` or `classDef` lines. Offline, the page shows the source in a mono block instead of a broken box, so a plan is still readable without network. When the diagram must render offline or Mermaid's layout fights you (three boxes in a row, a simple before/after), draw an inline SVG using the `.diagram` classes in `components.md`.
 

@@ -2,7 +2,7 @@
 
 A skill for terminal AI agents (Claude Code, Cursor CLI, anything that reads `SKILL.md`) that turns the plan an agent just wrote into a designed HTML page and opens it in your browser.
 
-You still work in the terminal. But when the agent says "here's my plan," instead of reading 200 lines of monospace you get a page: summary and the decision you're being asked for at the top, context with file references, a diagram of how the pieces fit, numbered steps with the files each one touches, risks, verification, and what happens on approval. Same layout every time, so you always know where to look.
+You still work in the terminal. But when the agent says "here's my plan," instead of reading 200 lines of monospace you get a page: a diagram of the change and the decision you're being asked for at the top, then context with file references, the technical approach, numbered steps with the files each one touches, risks, and end-to-end verification. Same layout every time, so you always know where to look.
 
 ## Install
 
