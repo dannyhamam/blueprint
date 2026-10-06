@@ -134,8 +134,9 @@ svg.diagram .box{fill:var(--surface);stroke:var(--line-2);stroke-width:1.2}svg.d
 .carousel.is-ready .slides{overflow:hidden;border-radius:12px;transition:height .35s ease}
 .carousel .track{display:flex;align-items:flex-start;transition:transform .35s ease}
 .carousel .track>figure{flex:0 0 100%;min-width:0;margin:0}
-.carousel-nav{position:absolute;top:50%;z-index:1;width:36px;height:36px;margin-top:-18px;padding:0;border:1px solid var(--line-2);border-radius:50%;background:var(--paper);color:var(--ink-2);font-size:15px;line-height:1;transition:opacity .2s,border-color .15s,color .15s}
-.carousel-nav.prev{left:-18px}.carousel-nav.next{right:-18px}
+.carousel-nav{position:absolute;top:50%;z-index:1;width:32px;height:32px;margin-top:-16px;padding:0;border:1px solid var(--line-2);border-radius:50%;background:var(--paper);color:var(--ink-2);font-size:15px;line-height:1;transition:opacity .2s,border-color .15s,color .15s}
+.carousel-nav.prev{left:-44px}.carousel-nav.next{right:-44px}
+@media(max-width:1100px){.carousel.is-ready .carousel-stage{padding:0 40px}.carousel-nav.prev{left:0}.carousel-nav.next{right:0}}
 .carousel-nav:hover:not(:disabled){border-color:var(--blue);color:var(--blue)}
 .carousel-nav:disabled{opacity:0;pointer-events:none}
 .carousel-count{margin-top:10px;text-align:center;font:11px var(--mono);color:var(--ink-3)}
@@ -163,7 +164,7 @@ svg.diagram .box{fill:var(--surface);stroke:var(--line-2);stroke-width:1.2}svg.d
 }
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important}}
 @media print{
- @page{margin:16mm}body{background:#fff;font-size:11px}.page{padding:0}nav.toc,.document-bar,.skip-link{display:none}main{padding:0;max-width:none}header.plan h1{font-size:32px}section{padding-top:24px}section h2{break-after:avoid}figure,.step,.callout,tr{break-inside:avoid}.carousel{outline:none}.carousel.is-ready .slides{height:auto!important;overflow:visible;transition:none}.carousel .track{display:block;transform:none!important;transition:none}.carousel .track>figure{margin:0 0 16px}.carousel-nav,.carousel-count{display:none}.table-scroll{overflow:visible}table{font-size:10px}a{color:inherit}.callout,.chip,.flow-node{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+ @page{margin:16mm}body{background:#fff;font-size:11px}.page{padding:0}nav.toc,.document-bar,.skip-link{display:none}main{padding:0;max-width:none}header.plan h1{font-size:32px}section{padding-top:24px}section h2{break-after:avoid}figure,.step,.callout,tr{break-inside:avoid}.carousel{outline:none}.carousel.is-ready .slides{height:auto!important;overflow:visible;transition:none}.carousel .track{display:block;transform:none!important;transition:none}.carousel .track>figure{margin:0 0 16px}.carousel.is-ready .carousel-stage{padding:0}.carousel-nav,.carousel-count{display:none}.table-scroll{overflow:visible}table{font-size:10px}a{color:inherit}.callout,.chip,.flow-node{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
 </style>
 <!-- Per-plan design overrides. Fill ONLY when the user asked for a design change
