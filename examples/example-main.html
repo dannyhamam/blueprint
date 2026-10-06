@@ -1,173 +1,106 @@
-<main>
+<main id="main">
 <header class="plan">
+  <div class="eyebrow">Implementation plan</div>
   <h1>Add rate limiting to the public API</h1>
   <p class="sub">Stop a single API key from starving everyone else, without adding infrastructure or breaking well-behaved clients.</p>
   <div class="meta">
-    <span><b>Sep 24, 2026</b></span>
+    <span>Blueprint</span>
+    <span><b>Sep 24, 2026 22:58</b></span>
     <span>uppi-order-portal</span>
   </div>
 </header>
 
-<section id="summary">
-  <h2><span class="n">01</span>Summary</h2>
-  <figure>
-    <pre class="mermaid">
-flowchart LR
-  P[Noisy partner] --> G["Rate limit<br/>(new)"]
-  O[Other tenants] --> G
-  G -->|within limit| API[API]
-  G -->|"over limit: 429"| P
-    </pre>
-    <figcaption>Today every request reaches the API. After, each key gets a budget and over-budget requests are told to retry later.</figcaption>
+<section id="overview">
+  <h2><span class="n">01</span>Overview</h2>
+  <figure class="change-map" aria-label="Before and after rate limiting">
+    <div class="map-heading"><span>The change at a glance</span><span>One new layer. A healthier API.</span></div>
+    <div class="change-rows">
+      <div class="change-row">
+        <span class="row-label">Today</span>
+        <div class="flow-node">Every request<small>Including retry storms</small></div>
+        <span class="flow-arrow" aria-hidden="true">→</span>
+        <div class="flow-node">No limit<small>All traffic gets through</small></div>
+        <span class="flow-arrow" aria-hidden="true">→</span>
+        <div class="flow-node">API slows down<small>Every tenant feels it</small></div>
+      </div>
+      <div class="change-row">
+        <span class="row-label">Proposed</span>
+        <div class="flow-node">Every request<small>Budgeted by API key</small></div>
+        <span class="flow-arrow" aria-hidden="true">→</span>
+        <div class="flow-node hot">Rate limiter<small>Over budget? Retry later.</small></div>
+        <span class="flow-arrow" aria-hidden="true">→</span>
+        <div class="flow-node">Responsive API<small>Capacity stays available</small></div>
+      </div>
+    </div>
+    <figcaption>A per-key budget stops a noisy partner from consuming everyone's capacity.</figcaption>
   </figure>
-  <p class="lede">Three times this month one integration partner's retry loop pushed p99 latency past 4s for every tenant. Nothing in the API says no. This plan adds a per-key token-bucket limiter as Express middleware, ships it in log-only mode for two days to calibrate, then enforces with a <code>429</code> and <code>Retry-After</code>. No new services; the limiter lives in-process and the limits live in the existing config table.</p>
-  <div class="callout decision">
-    <div class="k">Decision needed</div>
-    <p>Approve the in-process limiter over a Redis-backed one. In-process means limits are per instance (3× the nominal number across our three replicas), which is acceptable for the abuse case we actually have. Redis is the upgrade path if we ever need exact global limits. On approval, Step 1 starts on <code>feat/rate-limit</code>.</p>
-  </div>
+  <p class="lede">One partner’s retry loop has slowed the API for every tenant three times this month. Add a per-key request budget in the existing app, observe real traffic for 48 hours, then enforce with <code>429</code> and <code>Retry-After</code>. No new infrastructure.</p>
 </section>
 
-<section id="context">
-  <h2><span class="n">02</span>Context</h2>
-  <p>The public API is a single Express app behind the load balancer, three replicas, sticky sessions off. Authentication resolves an API key to a tenant in <code>authenticate()</code> and attaches it to <code>req.tenant</code>. From there every route is unmetered. The incident on Sep 18 was 41k requests in four minutes from one key, all retries of a failing <code>POST /orders</code>.</p>
-  <h3>What I found</h3>
-  <ul>
-    <li>Auth middleware already resolves key → tenant before routing, so there's a clean place to hang a limiter — <span class="path">src/api/middleware/authenticate.ts</span></li>
-    <li>Per-tenant settings already live in a <code>tenant_config</code> table with a JSON <code>settings</code> column; no migration needed for limits — <span class="path">src/db/schema/tenant_config.ts</span></li>
-    <li>Request logging emits one structured line per request with <code>tenant_id</code>; enough to calibrate limits from existing logs — <span class="path">src/api/middleware/requestLog.ts</span></li>
-    <li>No existing <code>429</code> handling in the SDK; clients would see it as a generic error today — <span class="path">packages/sdk/src/client.ts</span></li>
-  </ul>
-  <dl class="kv">
-    <dt>Constraints</dt><dd>No new infrastructure this quarter. Zero-downtime deploy. Must not affect the two partners on legacy keys without notice.</dd>
-    <dt>Out of scope</dt><dd>Per-route quotas, billing tiers, the admin UI for editing limits. Limits are edited via the existing config CLI.</dd>
-  </dl>
-</section>
+<section id="solution">
+  <h2><span class="n">02</span>Solution</h2>
+  <p>Add an in-memory request budget per API key, after authentication and before route handlers. Reuse the existing tenant settings and request logs. Each replica tracks its own budget, so three replicas can allow up to 3× the configured limit; exact global limits would require shared storage.</p>
 
-<section id="approach">
-  <h2><span class="n">03</span>Approach</h2>
-  <p>A token bucket per API key, held in process memory, refilled on a timer. It sits directly after <code>authenticate()</code> so it has the tenant but runs before any handler or database work. When the bucket is empty it answers <code>429</code> with a <code>Retry-After</code> header instead of forwarding. A per-tenant override in <code>tenant_config.settings.rateLimit</code> beats the global default. A <code>RATE_LIMIT_MODE=log</code> flag makes it observe-only so we can size the limits on real traffic before anything is blocked.</p>
-  <figure>
-    <pre class="mermaid">
-flowchart LR
-  C[Client] --> LB[Load balancer]
-  LB --> A["authenticate()"]
-  A --> L["rateLimit()<br/>(new)"]
-  L -->|allowed| H[Route handlers]
-  L -->|"429 + Retry-After"| C
-  H --> DB[(Postgres)]
-  CFG[(tenant_config)] -.limits.-> L
-  subgraph proc["API process ×3"]
-    A
-    L
-    H
-  end
-    </pre>
-    <figcaption>The limiter runs after auth and before any handler. Limits come from the existing tenant config.</figcaption>
-  </figure>
-  <h3>Options considered</h3>
-  <table>
-    <thead><tr><th>Option</th><th>For</th><th>Against</th><th>Verdict</th></tr></thead>
-    <tbody>
-      <tr class="chosen"><td>In-process token bucket</td><td>No new infra; ~200 lines; ships this week</td><td>Limits are per replica, so effective limit is 3× nominal</td><td><span class="chip blue">Chosen</span></td></tr>
-      <tr><td>Redis-backed counter</td><td>Exact global limits; shared across replicas</td><td>New dependency and failure mode; Redis isn't in the stack</td><td>Upgrade path if per-replica proves too loose</td></tr>
-      <tr><td>Limit at the load balancer</td><td>No application code</td><td>LB only sees IPs, not API keys; partners share egress IPs</td><td>Rejected</td></tr>
-    </tbody>
-  </table>
-</section>
-
-<section id="steps">
-  <h2><span class="n">04</span>Steps</h2>
-  <div class="phase"><b>Phase 1</b><span>Build and land behind a flag</span></div>
-  <ol class="steps">
+  <h3>What changes</h3>
+  <ol class="steps request-flow" aria-label="Files in request order">
     <li class="step">
       <div>
-        <h3>Write the token-bucket limiter</h3>
-        <div class="facts"><span><b>Effort</b> M</span><span><b>Depends on</b> —</span><span><b>Risk</b> low</span></div>
-        <p>A <code>Map&lt;apiKey, Bucket&gt;</code> with capacity and refill rate, pruned every five minutes so idle keys don't leak memory. Pure function core so it's trivially testable; the middleware wrapper is thin.</p>
-        <div class="files"><span class="path new">src/api/middleware/rateLimit.ts</span><span class="path new">src/api/middleware/rateLimit.test.ts</span></div>
-        <div class="verify"><b>Verify</b>Unit tests: 61st request in a minute at 60/min is rejected; bucket refills at the configured rate; idle keys are pruned.</div>
+        <div class="flow-stage">Send an API request</div>
+        <h3 class="file-heading"><code>packages/sdk/src/client.ts</code><span class="chip">Update</span></h3>
+        <p>The SDK sends the authenticated request as it does today. Update its response handling to recognize rate limits; the return path is shown in step 4.</p>
+        <div class="verify"><b>Verify</b>Normal requests keep their existing behavior.</div>
       </div>
     </li>
     <li class="step">
       <div>
-        <h3>Read limits from tenant config with a global default</h3>
-        <div class="facts"><span><b>Effort</b> S</span><span><b>Depends on</b> Step 1</span><span><b>Risk</b> low</span></div>
-        <p>Global default from <code>RATE_LIMIT_PER_MIN</code> (env, default 60). Per-tenant override at <code>settings.rateLimit.perMinute</code>, already loaded on <code>req.tenant</code> by auth, so no extra query.</p>
-        <div class="files"><span class="path">src/config/env.ts</span><span class="path">src/db/schema/tenant_config.ts</span><span class="path">src/api/middleware/rateLimit.ts</span></div>
-        <div class="verify"><b>Verify</b>Test: tenant with override 600/min is not limited at 100 req/min; tenant without override is.</div>
+        <div class="flow-stage">Enter the API middleware chain</div>
+        <h3 class="file-heading"><code>src/api/app.ts</code><span class="chip">Update</span></h3>
+        <p>Mount the limiter after the existing authentication middleware, which resolves the API key and tenant. The request reaches the new limiter before any route handler runs.</p>
+        <div class="verify"><b>Verify</b>Authentication still runs first; unauthenticated requests never reach the limiter.</div>
       </div>
     </li>
     <li class="step">
       <div>
-        <h3>Mount after auth, with a log-only mode</h3>
-        <div class="facts"><span><b>Effort</b> S</span><span><b>Depends on</b> Step 2</span><span><b>Risk</b> medium</span></div>
-        <p><code>RATE_LIMIT_MODE=off|log|enforce</code>. In <code>log</code>, the middleware records what it <em>would</em> have done to the request log and passes through. Ships with <code>off</code>; flipped per environment.</p>
-        <div class="files"><span class="path">src/api/app.ts</span><span class="path">src/api/middleware/requestLog.ts</span></div>
-        <div class="verify"><b>Verify</b>Integration test hits the app in each mode and asserts pass-through vs 429. Log line includes <code>rate_limit.decision</code>.</div>
+        <div class="flow-stage">Check the key’s request budget</div>
+        <h3 class="file-heading"><code>src/api/middleware/rateLimit.ts</code><span class="chip blue">New</span></h3>
+        <p>Keep an in-memory token bucket per key, using its tenant override or the proposed 60/min default. Requests within budget continue to the existing route handlers. Over-budget requests return <code>429</code> with <code>Retry-After</code>; in log-only mode they are recorded and allowed through. Prune idle buckets every five minutes.</p>
+        <div class="verify"><b>Verify</b>Test refill, cleanup, overrides, and off/log/enforce behavior.</div>
+        <details class="related-files">
+          <summary>5 supporting files · configuration, logging, tests</summary>
+          <dl>
+            <dt><span class="path">src/config/env.ts</span> <span class="chip">Update</span></dt>
+            <dd>Parse the default budget and off/log/enforce mode at startup. Tenant limits come from the existing settings JSON; no schema migration is needed.</dd>
+            <dt><span class="path">src/api/middleware/requestLog.ts</span> <span class="chip">Update</span></dt>
+            <dd>Include the limiter’s decision in the structured request log.</dd>
+            <dt><span class="path new">src/api/middleware/rateLimit.test.ts</span> <span class="chip">New</span></dt>
+            <dd>Cover bucket behavior, tenant overrides, and middleware outcomes.</dd>
+            <dt><span class="path new">ops/queries/rate_limit_calibration.sql</span> <span class="chip">New</span></dt>
+            <dd>Find would-be rejections during 48 hours of observation; set overrides for legitimate high-volume tenants.</dd>
+            <dt><span class="path">infra/env/production.env</span> <span class="chip">Update</span></dt>
+            <dd>Deploy with the limiter off, observe in log-only mode, then enforce. Revert to log-only mode if legitimate traffic is affected.</dd>
+          </dl>
+        </details>
+      </div>
+    </li>
+    <li class="step">
+      <div>
+        <div class="flow-stage">Return to the caller · when the API responds 429</div>
+        <h3 class="file-heading"><code>packages/sdk/src/client.ts</code><span class="chip">Update</span></h3>
+        <p>Read <code>Retry-After</code>, wait up to 30 seconds, and retry through the same request path. This is the response-side change in the same SDK file from step 1.</p>
+        <div class="verify"><b>Verify</b>A <code>429</code> with <code>Retry-After: 2</code> delays the next attempt by at least two seconds.</div>
+        <details class="related-files">
+          <summary>2 supporting files · release notes and API docs</summary>
+          <dl>
+            <dt><span class="path">packages/sdk/CHANGELOG.md</span> <span class="chip">Update</span></dt>
+            <dd>Document the retry behavior and release the SDK before enforcement.</dd>
+            <dt><span class="path new">docs/api/rate-limits.md</span> <span class="chip">New</span></dt>
+            <dd>Explain per-key limits and retry behavior. Notify the two legacy-key partners 24 hours before enforcement.</dd>
+          </dl>
+        </details>
       </div>
     </li>
   </ol>
 
-  <div class="phase"><b>Phase 2</b><span>Calibrate, then enforce</span></div>
-  <ol class="steps">
-    <li class="step">
-      <div>
-        <h3>Run log-only in production for 48 hours</h3>
-        <div class="facts"><span><b>Effort</b> S</span><span><b>Depends on</b> Phase 1 deployed</span><span><b>Risk</b> low</span></div>
-        <p>Query the request log for would-be rejections per tenant. Anyone legitimately over 60/min gets a tenant override before enforcement. Target: zero would-be rejections for known-good tenants.</p>
-        <div class="files"><span class="path">ops/queries/rate_limit_calibration.sql</span></div>
-        <div class="verify"><b>Verify</b>Calibration query returns only the known offender above the threshold.</div>
-      </div>
-    </li>
-    <li class="step">
-      <div>
-        <h3>Teach the SDK to honour Retry-After</h3>
-        <div class="facts"><span><b>Effort</b> S</span><span><b>Depends on</b> —</span><span><b>Risk</b> low</span></div>
-        <p>On <code>429</code>, the SDK sleeps for <code>Retry-After</code> seconds (capped at 30) before retrying, instead of hammering. Released before enforcement so partners on the current SDK behave well by default.</p>
-        <div class="files"><span class="path">packages/sdk/src/client.ts</span><span class="path">packages/sdk/CHANGELOG.md</span></div>
-        <div class="verify"><b>Verify</b>SDK test: a 429 with <code>Retry-After: 2</code> delays the next attempt by ≥2s.</div>
-      </div>
-    </li>
-    <li class="step">
-      <div>
-        <h3>Flip to enforce and notify partners</h3>
-        <div class="facts"><span><b>Effort</b> S</span><span><b>Depends on</b> Steps 4, 5</span><span><b>Risk</b> medium</span></div>
-        <p>Set <code>RATE_LIMIT_MODE=enforce</code> in production. Email the two legacy-key partners 24h ahead with their limit and the SDK version. Keep <code>log</code> as the one-line rollback.</p>
-        <div class="files"><span class="path">infra/env/production.env</span><span class="path new">docs/api/rate-limits.md</span></div>
-        <div class="verify"><b>Verify</b>p99 latency stays under 800ms through the next partner retry storm; 429 count matches calibration prediction ±10%.</div>
-      </div>
-    </li>
-  </ol>
 </section>
 
-<section id="risks">
-  <h2><span class="n">05</span>Risks &amp; open questions</h2>
-  <table>
-    <thead><tr><th>Risk</th><th>Likelihood</th><th>Impact</th><th>Mitigation</th></tr></thead>
-    <tbody>
-      <tr><td>A legitimate burst gets throttled</td><td><span class="chip warn">Medium</span></td><td><span class="chip warn">Medium</span></td><td>48h log-only calibration; per-tenant overrides; default set at 2× the highest observed legitimate rate.</td></tr>
-      <tr><td>Per-replica limits are too loose to stop the abuse</td><td><span class="chip good">Low</span></td><td><span class="chip warn">Medium</span></td><td>Set the nominal limit at ⅓ of the intended global limit. If still insufficient, the Redis option is a drop-in behind the same interface.</td></tr>
-      <tr><td>Memory growth from many distinct keys</td><td><span class="chip good">Low</span></td><td><span class="chip good">Low</span></td><td>Five-minute prune of idle buckets; we have ~400 active keys, ~100 bytes each.</td></tr>
-    </tbody>
-  </table>
-  <h3>Open questions</h3>
-  <ul class="checks">
-    <li>Is 60 req/min the right global default, or should it be derived from the calibration query?</li>
-    <li>Should <code>POST /orders</code> get a stricter limit than reads, or is one number per key enough for now?</li>
-    <li class="done">Do we need a migration for tenant limits? No — <code>tenant_config.settings</code> is JSON.</li>
-  </ul>
-</section>
-
-<section id="verification">
-  <h2><span class="n">06</span>Verification</h2>
-  <ul class="checks">
-    <li>Replay the Sep 18 traffic shape in staging; p99 for other tenants stays under 800ms.</li>
-    <li>Partners acknowledged the notice; SDK release published.</li>
-  </ul>
-</section>
-
-<footer>
-  <span>Blueprint · generated by Claude Code · Sep 24, 2026 22:58</span>
-  <span>~/.blueprint/2026-09-24-add-rate-limiting.html</span>
-</footer>
 </main>

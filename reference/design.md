@@ -1,47 +1,45 @@
 # Design
 
-Editorial page with a consulting deck's spine. Warm off-white paper, one serif for the headline and the section numbers, system sans for everything else, and a single blue that only ever means "this is the thing." Tables carry comparisons; cards carry steps; prose carries reasoning.
+A calm implementation brief: an off-white canvas, crisp white diagrams and step cards, a persistent document spine, and blue reserved for the proposed change and navigation. The page helps someone understand a plan before authorizing code changes. It never submits approval or starts work.
 
-The design lives in `templates/plan.html`. Change it there, once, and every future plan follows. A plan never restyles itself unless the user asked for that plan to look different.
+The shared design lives in `templates/plan.html`. Each generated plan inherits it; one-off user requests belong in `style#custom`.
 
 ## Tokens
 
-| Token | Value | Used for |
+| Token | Value | Purpose |
 |---|---|---|
-| `--bg` | `#FBFBF9` | page |
-| `--surface` | `#F4F3EE` | callouts, code, chips, table row highlight |
-| `--surface-2` | `#ECEAE2` | neutral chips, bar tracks |
-| `--paper` | `#FFFFFF` | figure background so diagrams sit on white |
-| `--ink` | `#1E1D1A` | headings, first table column, body emphasis |
-| `--ink-2` | `#55534C` | body text in tables and cards, subtitle |
-| `--ink-3` | `#8E8C83` | labels, meta, numerals, captions |
-| `--line` / `--line-2` | `#E2E0D8` / `#CFCDC3` | hairlines / stronger rules |
-| `--blue` | `#2451D6` | chosen row, current phase dot, active TOC, links, step numbers, section numbers |
-| `--blue-soft` / `--blue-line` / `--blue-ink` | `#E8EDFB` / `#C9D5F5` / `#1A3CA8` | decision callouts and blue chips |
-| `--good` / `--warn` / `--bad` | `#2C7A4B` / `#A86B12` / `#B23A32` | chips and callouts only, for status or severity |
+| `--bg` | `#f5f5f2` | warm document canvas |
+| `--paper` | `#fff` | diagrams, tables, step cards |
+| `--surface` / `--surface-2` | `#f2f3f4` / `#e8ebef` | code, supporting panels, tracks |
+| `--ink` | `#202936` | headings and primary text |
+| `--ink-2` / `--ink-3` | `#526071` / `#697585` | body details / secondary labels |
+| `--line` / `--line-2` | `#e1e5e9` / `#c6ced7` | borders / stronger rules |
+| `--blue` | `#345bd6` | brand, links, current navigation, proposed change |
+| `--blue-soft` / `--blue-line` / `--blue-ink` | `#eef2ff` / `#ccd7ff` / `#2949b0` | decisions and selected options |
+| `--good` / `--warn` / `--bad` | `#277351` / `#916013` / `#ad433c` | status, verification, severity |
 
-## Type
+## Type and hierarchy
 
-- Headline: `Charter, Iowan Old Style, Palatino, Georgia, serif` at 40px. Charter and Iowan ship with macOS; Georgia is on everything else. No web fonts, no network.
-- Section numbers (`01`…`06`) and step numbers: same serif, 20px and 26px, in blue. This is the one flourish.
-- Everything else: system sans at 15.5px / 1.6. Section titles are 13px uppercase tracked, so the eye reads the number first and the title second.
-- Paths, code, timeline dates: system mono.
+- Paragraphs and the subtitle use the full width of their content container, aligned with diagrams and cards; do not add a separate character-based width cap.
+- System sans throughout, with a bold 32–47px headline and comfortable 15px body text. No downloaded fonts.
+- Section headings are 19px with small outlined mono numbers; a trailing rule separates sections without enclosing everything in cards.
+- Paths and code use system mono. Paths wrap rather than stretch the page. In “What changes,” the primary file is the node heading; connected nodes follow request execution order. Supporting file changes are expandable beside the relevant node.
+- The before/after map uses concise labels. Short prose explains the outcome underneath. Essential constraints belong in the relevant Solution sentence; do not add separate approval or scope panels.
 
-## Layout
+## Layout and behavior
 
-- 232px table of contents pinned to the left edge; 740px content column centered in the viewport, pushed right only when the screen is too narrow to clear the sidebar. The TOC is generated from the section `h2`s and highlights on scroll.
-- Sections are separated by 56px of air and a hairline under the title, never by boxes.
-- Content max-width 70ch for prose so lines stay readable; tables and figures use the full 740px.
-- Below 900px the TOC moves above the content and timelines stack. Print drops the TOC and avoids breaking inside steps, figures, and tables.
+- Default to Overview and Solution. Supporting details live inside Solution; extra top-level sections appear only when they need independent review. Navigation and numbering derive from the sections present.
+- A fixed 248px sidebar holds the brand and generated section navigation. Main content is at most 900px wide with 48px side gutters.
+- At 1100px the sidebar and gutters narrow. At 800px navigation becomes a sticky horizontal list. At 480px map row labels move above the flow, and supporting lists stack.
+- Tables scroll inside their own focusable region on small screens. Step cards keep a continuous counter across phases.
+- Standard plans use non-interactive verification beside each file change. Completion checklists are omitted; the checklist component is reserved for explicitly requested tracking.
+- Native browser printing removes navigation and keeps figures, cards, and table rows together where possible.
+- Navigation has visible focus, an active location label, and a skip link. Reduced-motion preferences disable smooth scrolling.
 
-## Where blue is allowed
+## Diagrams
 
-Exactly: chosen option row, current timeline dot, active TOC entry, decision callouts, links, step and section numbers. If you find yourself adding blue anywhere else, you're decorating.
+Use `.change-map` for a simple before/after story that renders without JavaScript or a network. Use Mermaid or inline SVG for relationships the map cannot convey. Mermaid colors match the document and the source remains available if its CDN cannot load.
 
-## Changing the design
+## Verify changes
 
-Edit `templates/plan.html`, then re-render `examples/example-plan.html` from it and look at it in a browser at 1280px and at 800px. Keep `examples/example-plan.html` as the visual regression reference: if a change makes it worse, the change is wrong.
-
-## Exploring alternatives
-
-To try a different direction in a design tool before committing, paste the prompt in [`design-prompt.md`](design-prompt.md). It describes the anatomy and constraints so the tool designs the same page, not a different product.
+Run `python3 scripts/build-example.py`. Inspect `examples/example-plan.html` at desktop, 800px, and phone widths; check section navigation, supporting-file disclosures, table overflow, and print layout. The example must always be generated from the shared template and its content file.

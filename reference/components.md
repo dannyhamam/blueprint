@@ -5,15 +5,17 @@ Copy-paste markup for everything the template styles. All classes are defined in
 ## Section shell
 
 ```html
-<section id="approach">
-  <h2><span class="n">03</span>Approach</h2>
+<section id="solution">
+  <h2><span class="n">02</span>Solution</h2>
   …
 </section>
 ```
 
-The `id` and `.n` number are what the sidebar reads. Keep them matching the anatomy table in SKILL.md.
+The sidebar reads each top-level section’s `id` and `h2`; it generates sequential `.n` numbers. Start with Overview and Solution. Add other top-level sections only when they need independent review; use `h3` for supporting detail inside Solution.
 
 ## Callouts
+
+Optional components for exceptional warnings or explicitly requested annotations. Do not add decision, approval, or scope callouts to a normal plan; keep Overview and Solution focused on the explanation.
 
 ```html
 <div class="callout decision"><div class="k">Decision needed</div><p>Approve the Postgres route over Redis.</p></div>
@@ -69,24 +71,15 @@ The `id` and `.n` number are what the sidebar reads. Keep them matching the anat
 </table>
 ```
 
-## Steps
+## Files in request order
 
-```html
-<div class="phase"><b>Phase 1</b><span>Land behind a flag</span></div>
-<ol class="steps">
-  <li class="step">
-    <div>
-      <h3>Add limiter middleware</h3>
-      <div class="facts"><span><b>Effort</b> M</span><span><b>Depends on</b> —</span><span><b>Risk</b> low</span></div>
-      <p>Token bucket keyed by API key, 60 req/min default, configurable per route.</p>
-      <div class="files"><span class="path new">src/api/middleware/limit.ts</span><span class="path">src/api/app.ts</span></div>
-      <div class="verify"><b>Verify</b>Unit test: 61st request in a minute returns 429 with Retry-After.</div>
-    </div>
-  </li>
-</ol>
-```
+Use `ol.steps.request-flow` in “What changes.” Each `.step` leads with `.flow-stage` (what the request does), an `h3.file-heading` containing the primary path in `code` and an Update/New chip, a short explanation, and `.verify`. The connectors show request execution order, not the order files will be edited.
 
-Numbers are automatic (CSS counter) and run continuously across phases: a second `<ol class="steps">` after another `.phase` continues from where the first left off. The counter resets per `<section>`.
+Tests, config, and docs belong in an optional `details.related-files` within the node they support. Give its `summary` a descriptive label and list each file with its specific change in a `dl`. These details expand for printing and return to their previous state afterward.
+
+The complete pattern is in `templates/plan.html`; `examples/example-main.html` shows an SDK request entering the API, passing through a new limiter, and returning to the SDK on a 429. Mark unchanged handoffs and conditional paths in the explanation. Repeated files on a return path represent the same file, not another file to edit.
+
+Numbers are automatic and continuous within a section. Regular `ol.steps` remains available for work that follows a dependency sequence rather than a request path; label that sequence accurately.
 
 ## Timeline
 
@@ -101,12 +94,27 @@ Numbers are automatic (CSS counter) and run continuously across phases: a second
 
 ## Checklist
 
+Use only when the user explicitly requests completion tracking. Standard plan-review pages use non-interactive verification statements beside file changes, without a closing checklist.
+
 ```html
 <ul class="checks">
   <li class="done">Sampling in place</li>
   <li>Confirm the 60/min default with the API owner</li>
 </ul>
 ```
+
+Items are clickable checkboxes in the rendered page (click, Space or Enter). `class="done"` sets the initial state; after that the reader's ticks persist per file in `localStorage`, so re-rendering a plan at the same path keeps them as long as item order is unchanged. Inline `<code>` and links inside an item are fine. Use checklists only for things that get ticked off; questions go in `.questions`.
+
+## Open questions
+
+```html
+<ol class="questions">
+  <li>Is 60/min the right default for the public API?</li>
+  <li>Who owns the rollout comms?</li>
+</ol>
+```
+
+Numbered Q1, Q2… so the user can answer by number. Not clickable.
 
 ## Bars (pure CSS comparison)
 
@@ -155,3 +163,13 @@ flowchart LR
 ```
 
 Inline: `<code>Retry-After</code>`.
+
+## Before/after map
+
+Use the template’s `.change-map` figure when the change can be explained in two rows of three nodes. Each `.change-row` contains a `.row-label`, three `.flow-node` elements, and two `.flow-arrow` spans with `aria-hidden="true"`. Highlight only the proposed change with `.flow-node.hot`. Optional `<small>` text explains each node. Keep labels short; the rows reflow on phones without losing the comparison.
+
+The full pattern is in `templates/plan.html` and the rate-limiter example is in `examples/example-main.html`. It renders offline without JavaScript. Mermaid and inline SVG remain available when a simple map cannot express the plan.
+
+## Document shell
+
+Keep `<main id="main">` and the header’s `.eyebrow` when filling a plan. The sidebar, skip link, and local table-scroll wrappers come from the template. These controls navigate the document; they do not approve the proposal or run code.

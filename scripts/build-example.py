@@ -14,7 +14,7 @@ template = (root / "templates" / "plan.html").read_text()
 main = (root / "examples" / "example-main.html").read_text().strip()
 
 title = re.search(r"<h1>(.*?)</h1>", main, re.S).group(1).strip()
-out = re.sub(r"<main>.*?</main>", lambda _: main, template, count=1, flags=re.S)
+out = re.sub(r"<main\b[^>]*>.*?</main>", lambda _: main, template, count=1, flags=re.S)
 out = out.replace("<title>{{TITLE}} · Blueprint</title>", f"<title>{title} · Blueprint</title>")
 
 dest = root / "examples" / "example-plan.html"

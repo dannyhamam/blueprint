@@ -5,171 +5,154 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{{TITLE}} · Blueprint</title>
 <style>
-/* =====================================================================
-   Blueprint design system
-   Do NOT edit this block inside a rendered plan. Design changes belong in
-   the blueprint repo (templates/plan.html) so every plan stays consistent.
-   Per-plan overrides the user explicitly asked for go in <style id="custom">.
-   ===================================================================== */
+/* Blueprint's shared design system. Per-plan overrides belong in #custom. */
 :root{
-  --bg:#FBFBF9; --surface:#F4F3EE; --surface-2:#ECEAE2; --paper:#FFFFFF;
-  --ink:#1E1D1A; --ink-2:#55534C; --ink-3:#8E8C83;
-  --line:#E2E0D8; --line-2:#CFCDC3;
-  --blue:#2451D6; --blue-soft:#E8EDFB; --blue-line:#C9D5F5; --blue-ink:#1A3CA8;
-  --good:#2C7A4B; --good-soft:#E6F2EA; --good-line:#BFDCC9;
-  --warn:#A86B12; --warn-soft:#FBF0DC; --warn-line:#EED9B0;
-  --bad:#B23A32;  --bad-soft:#F9E6E4;  --bad-line:#EFC7C3;
-  --serif:"Charter","Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+  --bg:#f5f5f2;--surface:#f2f3f4;--surface-2:#e8ebef;--paper:#fff;
+  --ink:#202936;--ink-2:#526071;--ink-3:#697585;
+  --line:#e1e5e9;--line-2:#c6ced7;
+  --blue:#345bd6;--blue-soft:#eef2ff;--blue-line:#ccd7ff;--blue-ink:#2949b0;
+  --good:#277351;--good-soft:#edf7f1;--good-line:#c8e4d4;
+  --warn:#916013;--warn-soft:#fcf5e8;--warn-line:#ead9b5;
+  --bad:#ad433c;--bad-soft:#fcf0ee;--bad-line:#efcfca;
   --sans:-apple-system,BlinkMacSystemFont,"Inter","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-  --mono:ui-monospace,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
-  --side:232px; --content:740px; --gap:56px;
+  --serif:"Iowan Old Style",Charter,Georgia,serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --side:248px;--content:900px;
 }
 *{box-sizing:border-box}
-html{scroll-behavior:smooth}
-body{margin:0;background:var(--bg);color:var(--ink);font:15.5px/1.6 var(--sans);-webkit-font-smoothing:antialiased}
+html{scroll-behavior:smooth;scroll-padding-top:32px}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.7 var(--sans);-webkit-font-smoothing:antialiased}
 a{color:var(--blue);text-decoration:none}a:hover{text-decoration:underline}
-code,kbd{font-family:var(--mono);font-size:.86em}
-code{background:var(--surface);padding:.1em .38em;border-radius:4px;border:1px solid var(--line)}
-pre{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:14px 16px;overflow:auto;font:13px/1.55 var(--mono);margin:14px 0 20px}
-pre code{background:none;border:0;padding:0;font-size:inherit}
+button{font:inherit;cursor:pointer}
+a,button{-webkit-tap-highlight-color:transparent}
+:focus-visible{outline:3px solid var(--blue);outline-offset:4px}
+::selection{background:var(--blue-line);color:var(--ink)}
+code,kbd{font-family:var(--mono);font-size:.84em}
+code{background:var(--surface);padding:.12em .35em;border-radius:4px;overflow-wrap:anywhere}
+pre{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px;overflow:auto;font:12px/1.6 var(--mono);margin:16px 0 24px}
+pre code{background:none;padding:0;font-size:inherit}
 strong,b{font-weight:600}
-
-/* ---- layout ---- */
-.page{position:relative}
-/* Sidebar pinned to the left edge; content centered in the viewport. */
-nav.toc{position:fixed;top:0;left:0;bottom:0;width:var(--side);padding:48px 24px 48px 32px;border-right:1px solid var(--line);background:var(--bg);font-size:13px;overflow:auto;z-index:2}
-nav.toc .brand{font:600 11px/1 var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);margin-bottom:28px}
-nav.toc ol{list-style:none;margin:0;padding:0}
-nav.toc li a{display:flex;gap:10px;padding:6px 0 6px 12px;color:var(--ink-2);border-left:2px solid transparent;margin-left:-1px}
-nav.toc li a .n{font:500 11px var(--mono);color:var(--ink-3);min-width:18px;padding-top:3px}
-nav.toc li a.active{color:var(--ink);border-color:var(--blue)}
-nav.toc li a.active .n{color:var(--blue)}
-nav.toc li a:hover{text-decoration:none;color:var(--ink)}
-main{max-width:calc(var(--content) + 64px);margin:0 auto;padding:48px 32px 120px}
-/* Centered, but never under the sidebar on narrower screens. */
-@media (min-width:901px){
-  main{margin-left:max(var(--side), calc(50% - var(--content)/2 - 32px))}
-}
-
-/* ---- header ---- */
-header.plan h1{font:400 40px/1.15 var(--serif);letter-spacing:-.01em;margin:0 0 10px}
-header.plan .sub{font-size:17px;color:var(--ink-2);margin:0 0 20px;max-width:60ch}
-.meta{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;font-size:13px;color:var(--ink-3);padding:14px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
-.meta b{color:var(--ink-2);font-weight:500}
-
-/* ---- sections ---- */
-section{padding-top:56px;counter-reset:step}
-section h2{display:flex;align-items:baseline;gap:14px;font:600 13px/1 var(--sans);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2);margin:0 0 20px;padding-bottom:10px;border-bottom:1px solid var(--line)}
-section h2 .n{font:400 20px/1 var(--serif);color:var(--blue);letter-spacing:0}
-h3{font:600 16px/1.35 var(--sans);margin:28px 0 8px}
-p{margin:0 0 14px;max-width:70ch}
-ul,ol{padding-left:22px;margin:0 0 14px}li{margin:4px 0}
+p{margin:0 0 16px}
+ul,ol{padding-left:22px;margin:0 0 18px}li{margin:7px 0}
+h3{font-size:17px;line-height:1.4;letter-spacing:-.02em;margin:28px 0 12px}
 hr{border:0;border-top:1px solid var(--line);margin:28px 0}
-.lede{font-size:17px;line-height:1.55}
 .muted{color:var(--ink-3)}
-
-/* ---- callout ---- */
-.callout{display:grid;grid-template-columns:auto 1fr;gap:14px;padding:16px 18px;border-radius:8px;background:var(--surface);border:1px solid var(--line);margin:18px 0}
-.callout .k{font:600 11px/1.6 var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);padding-top:3px;white-space:nowrap}
-.callout p:last-child{margin:0}
-.callout.decision{background:var(--blue-soft);border-color:var(--blue-line)}.callout.decision .k{color:var(--blue-ink)}
+/* A persistent document spine. */
+.page{padding-left:var(--side)}
+nav.toc{position:fixed;inset:0 auto 0 0;width:var(--side);background:#fafaf8;border-right:1px solid var(--line);padding:36px 22px 24px;z-index:3;display:flex;flex-direction:column;overflow:auto}
+.brand{display:flex;align-items:center;gap:10px;color:var(--ink);font-size:20px;font-weight:700;letter-spacing:-.8px;margin:0 10px 48px}
+.brand:hover{text-decoration:none}.brand-mark{display:grid;grid-template-columns:repeat(2,7px);gap:3px;padding:6px;border:1.5px solid var(--blue);border-radius:7px;transform:rotate(-5deg)}
+.brand-mark i{width:7px;height:7px;background:var(--blue);border-radius:1px}.brand-mark i:last-child{background:transparent;border:1px solid var(--blue)}
+.nav-label,.eyebrow{font:600 10px/1.4 var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
+.nav-label{margin:0 12px 14px}
+nav.toc ol{list-style:none;padding:0;margin:0}
+nav.toc li{margin:4px 0}
+nav.toc li a{display:flex;align-items:baseline;gap:12px;padding:11px 12px;border-radius:7px;color:var(--ink-2);font-size:12.5px;line-height:1.5;transition:background .15s,color .15s}
+nav.toc li a .n{font:11px var(--mono);color:var(--ink-3)}
+nav.toc li a:hover{background:var(--surface);text-decoration:none}
+nav.toc li a.active{background:var(--blue-soft);color:var(--blue-ink);font-weight:600}nav.toc li a.active .n{color:var(--blue)}
+.document-bar{height:65px;padding:0 48px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:16px;font-size:11px;color:var(--ink-3);background:var(--bg)}
+.document-bar b{font-weight:500;color:var(--ink-2)}.document-bar .slash{padding:0 12px;color:var(--line-2)}
+main{width:100%;max-width:calc(var(--content) + 96px);margin:0 auto;padding:52px 48px 48px}
+header.plan{padding-bottom:34px;border-bottom:1px solid var(--line)}
+header.plan .eyebrow{display:flex;align-items:center;gap:9px;margin-bottom:18px;color:var(--blue-ink)}
+header.plan .eyebrow::before{content:"";width:6px;height:6px;background:var(--blue);border-radius:50%}
+header.plan h1{font:650 clamp(32px,3.3vw,47px)/1.12 var(--sans);letter-spacing:-.055em;max-width:620px;margin:0 0 18px;text-wrap:balance}
+header.plan .sub{font-size:16px;line-height:1.65;color:var(--ink-2);margin:0 0 22px}
+.meta{display:flex;flex-wrap:wrap;align-items:center;gap:8px 0;font-size:11px;color:var(--ink-3)}
+.meta>span+span::before{content:"/";margin:0 14px;color:var(--line-2)}.meta b{font-weight:500;color:var(--ink-2)}
+/* Section hierarchy stays consistent from overview to evidence. */
+section{padding-top:40px;counter-reset:step;min-width:0}
+section+section{margin-top:12px}
+section h2{display:flex;align-items:center;gap:11px;font:600 19px/1.4 var(--sans);letter-spacing:-.035em;margin:0 0 22px}
+section h2 .n{font:11px/28px var(--mono);letter-spacing:0;color:var(--ink-3);border:1px solid var(--line-2);border-radius:6px;min-width:29px;text-align:center}
+section h2::after{content:"";height:1px;background:var(--line);flex:1;margin-left:8px}
+.lede{font-size:15px;line-height:1.8;color:var(--ink-2)}
+/* Review decision, intentionally separate from implementation. */
+.callout{display:grid;grid-template-columns:1fr;gap:8px;padding:22px 24px;border-radius:10px;background:var(--surface);border:1px solid var(--line);margin:22px 0}
+.callout .k{font:650 10px/1.5 var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
+.callout p{font-size:14px;line-height:1.75}.callout p:last-child{margin:0}
+.callout.decision{background:var(--blue-soft);border-color:var(--blue-line);border-left:3px solid var(--blue)}.callout.decision .k{color:var(--blue-ink)}
 .callout.warn{background:var(--warn-soft);border-color:var(--warn-line)}.callout.warn .k{color:var(--warn)}
 .callout.bad{background:var(--bad-soft);border-color:var(--bad-line)}.callout.bad .k{color:var(--bad)}
 .callout.good{background:var(--good-soft);border-color:var(--good-line)}.callout.good .k{color:var(--good)}
-
-/* ---- chips & paths ---- */
-.chip{display:inline-block;font:500 11.5px/1 var(--sans);padding:5px 8px;border-radius:999px;background:var(--surface-2);color:var(--ink-2);border:1px solid var(--line);vertical-align:middle;white-space:nowrap}
+.chip{display:inline-block;font:500 10px/1.3 var(--sans);padding:4px 8px;border-radius:5px;background:var(--surface);color:var(--ink-2);border:1px solid var(--line);vertical-align:middle;white-space:nowrap}
 .chip.blue{background:var(--blue-soft);color:var(--blue-ink);border-color:var(--blue-line)}
 .chip.good{background:var(--good-soft);color:var(--good);border-color:var(--good-line)}
 .chip.warn{background:var(--warn-soft);color:var(--warn);border-color:var(--warn-line)}
 .chip.bad{background:var(--bad-soft);color:var(--bad);border-color:var(--bad-line)}
-.path{display:inline-block;font:12.5px/1.5 var(--mono);background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:1px 6px;color:var(--ink-2)}
-.path.new{border-style:dashed}
-
-/* ---- tables ---- */
-table{width:100%;border-collapse:collapse;font-size:14px;margin:14px 0 22px}
-th{font:600 11.5px/1.4 var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);text-align:left;padding:8px 12px 8px 0;border-bottom:1px solid var(--line-2)}
-td{padding:11px 12px 11px 0;border-bottom:1px solid var(--line);vertical-align:top;color:var(--ink-2)}
-td:first-child{color:var(--ink);font-weight:500}
-tr.chosen td{background:var(--blue-soft)}
-tr.chosen td:first-child{color:var(--blue-ink);box-shadow:inset 3px 0 0 var(--blue);padding-left:10px}
-tr.chosen td:last-child{padding-right:10px}
-
-/* ---- steps ---- */
-.steps{list-style:none;padding:0;margin:0}
-.step{counter-increment:step;display:grid;grid-template-columns:44px 1fr;gap:0 18px;padding:22px 0;border-top:1px solid var(--line)}
-.step:last-child{border-bottom:1px solid var(--line)}
-.step::before{content:counter(step,decimal-leading-zero);font:400 26px/1 var(--serif);color:var(--blue);padding-top:2px}
-.step h3{margin:0 0 6px;font-size:16.5px}
-.step .facts{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12.5px;color:var(--ink-3);margin:6px 0 10px}
-.step .facts b{color:var(--ink-2);font-weight:500}
-.step p{margin:0 0 8px}
-.step .files{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 0}
-.step .verify{font-size:13.5px;color:var(--ink-2);border-left:2px solid var(--line-2);padding-left:12px;margin-top:12px}
-.step .verify b{color:var(--ink-3);font:600 11px var(--sans);letter-spacing:.08em;text-transform:uppercase;margin-right:8px}
-
-/* ---- phases ---- */
-.phase{margin:34px 0 8px;display:flex;align-items:baseline;gap:12px}
-.phase b{font:600 12px var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
-.phase span{color:var(--ink-2);font-size:14px}
-
-/* ---- timeline ---- */
-.timeline{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;margin:22px 0 26px;position:relative}
-.timeline::before{content:"";position:absolute;left:0;right:0;top:5px;height:1px;background:var(--line-2)}
-.timeline>div{position:relative;padding:20px 14px 0 0;font-size:13.5px}
-.timeline>div::before{content:"";position:absolute;top:0;left:0;width:11px;height:11px;border-radius:50%;background:var(--bg);border:2px solid var(--line-2)}
-.timeline>div.now::before{background:var(--blue);border-color:var(--blue)}
-.timeline>div.done::before{background:var(--ink-3);border-color:var(--ink-3)}
-.timeline .when{font:500 11px var(--mono);color:var(--ink-3);margin-bottom:3px}
-.timeline b{display:block;font-weight:600;margin-bottom:2px}
-.timeline p{margin:0;color:var(--ink-2);font-size:13px}
-
-/* ---- figures & diagrams ---- */
-figure{margin:20px 0 26px;padding:22px 20px 14px;background:var(--paper);border:1px solid var(--line);border-radius:8px}
-figcaption{font-size:12.5px;color:var(--ink-3);margin-top:12px;text-align:center}
-pre.mermaid{display:flex;justify-content:center;background:none;border:0;padding:0;margin:0;font:inherit;white-space:normal}
+.path{display:inline-block;max-width:100%;overflow-wrap:anywhere;font:11px/1.6 var(--mono);background:var(--surface);border:1px solid var(--line);border-radius:5px;padding:3px 7px;color:var(--ink-2)}.path.new{border-style:dashed}
+/* Tables retain their comparison columns; overflow is local on mobile. */
+.table-scroll{overflow-x:auto;margin:18px 0 24px;border:1px solid var(--line);border-radius:10px;background:var(--paper)}
+table{width:100%;border-collapse:collapse;font-size:13px;line-height:1.65;margin:18px 0 24px;background:var(--paper)}.table-scroll table{margin:0}
+th{font:600 9px/1.5 var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);text-align:left;padding:13px 16px;background:#fafbfc;border-bottom:1px solid var(--line)}
+td{padding:17px 16px;border-bottom:1px solid var(--line);vertical-align:top;color:var(--ink-2)}
+td:first-child{color:var(--ink);font-weight:600}tr:last-child td{border-bottom:0}
+tr.chosen td{background:var(--blue-soft)}tr.chosen td:first-child{box-shadow:inset 3px 0 0 var(--blue);color:var(--blue-ink)}
+.steps{list-style:none;padding:0;margin:0;display:grid;gap:12px}
+.step{counter-increment:step;display:grid;grid-template-columns:34px minmax(0,1fr);gap:16px;padding:25px;background:var(--paper);border:1px solid var(--line);border-radius:10px}
+.step::before{content:counter(step,decimal-leading-zero);font:500 12px/32px var(--mono);color:var(--ink-2);background:var(--surface);width:32px;height:32px;text-align:center;border-radius:7px}
+.step h3{margin:4px 0 8px;font-size:17px}.step p{margin:0 0 10px;font-size:14px;color:var(--ink-2)}
+.step .facts{display:flex;flex-wrap:wrap;gap:5px 16px;font-size:10px;color:var(--ink-3);margin:0 0 14px}.step .facts b{font-weight:500;color:var(--ink-2);margin-right:4px}
+.step .files{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0}
+.step .verify{font-size:12px;color:var(--ink-2);border-top:1px solid var(--line);padding-top:12px;margin-top:16px}.step .verify b{display:inline-block;color:var(--good);font:600 9px var(--sans);letter-spacing:.08em;text-transform:uppercase;margin-right:10px}
+/* Files follow the request through the system; supporting work stays adjacent. */
+.request-flow{gap:26px}
+.request-flow .step{position:relative;overflow:visible}
+.request-flow .step:not(:last-child)::after{content:"↓";position:absolute;left:32px;bottom:-25px;height:24px;color:var(--ink-3);font:16px/24px var(--sans)}
+.request-flow .file-heading{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:2px 0 10px}
+.request-flow .file-heading code{font-size:13px;line-height:1.6;padding:0;background:none;color:var(--ink);font-weight:600}
+.request-flow .flow-stage{font:600 10px/1.5 var(--sans);letter-spacing:.05em;color:var(--ink-3);margin-bottom:7px}
+.related-files{margin:16px 0 0;border-top:1px solid var(--line);padding-top:12px}
+.related-files summary{font-size:12px;color:var(--ink-2);cursor:pointer}
+.related-files dl{margin:12px 0 0;font-size:12px}
+.related-files dt{margin-top:10px}.related-files dd{margin:3px 0 0;color:var(--ink-2)}
+@media(max-width:480px){.request-flow .step:not(:last-child)::after{left:19px}.request-flow .file-heading code{font-size:12px}}
+.phase{margin:28px 0 14px;display:flex;align-items:baseline;gap:12px}.phase b{font:600 10px var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}.phase span{font-size:12px;color:var(--ink-2)}
+.timeline{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;margin:24px 0;position:relative}.timeline::before{content:"";position:absolute;inset:5px 0 auto;height:1px;background:var(--line-2)}
+.timeline>div{position:relative;padding:20px 14px 0 0;font-size:12px}.timeline>div::before{content:"";position:absolute;top:0;left:0;width:11px;height:11px;border-radius:50%;background:var(--bg);border:2px solid var(--line-2)}
+.timeline>div.now::before{background:var(--blue);border-color:var(--blue)}.timeline>div.done::before{background:var(--ink-3);border-color:var(--ink-3)}
+.timeline .when{font:10px var(--mono);color:var(--ink-3);margin-bottom:5px}.timeline b{display:block}.timeline p{font-size:11px;color:var(--ink-2);margin:0}
+figure{margin:0 0 22px;padding:25px;background:var(--paper);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+figcaption{font-size:11px;color:var(--ink-3);margin-top:18px;line-height:1.6}
+pre.mermaid{display:flex;justify-content:center;background:none;border:0;padding:0;margin:0;font:inherit;white-space:pre}
 pre.mermaid svg{max-width:100%;height:auto}
-body.no-mermaid pre.mermaid{white-space:pre;font:12.5px/1.5 var(--mono);color:var(--ink-2);justify-content:flex-start}
-body.no-mermaid pre.mermaid::before{content:"Mermaid source (offline — diagram not rendered)";display:block;font:600 11px var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);margin-bottom:8px}
+body.no-mermaid pre.mermaid{display:block;white-space:pre;font:12px/1.6 var(--mono);color:var(--ink-2)}
+body.no-mermaid pre.mermaid::before{content:"Diagram source · preview unavailable";display:block;font:600 11px var(--sans);margin-bottom:12px}
 svg.diagram{width:100%;height:auto;display:block;font:13px var(--sans);color:var(--ink-2)}
-svg.diagram .box{fill:var(--surface);stroke:var(--line-2);stroke-width:1.2}
-svg.diagram .box.hot{fill:var(--blue-soft);stroke:var(--blue)}
-svg.diagram text{fill:var(--ink)}
-svg.diagram .lbl{fill:var(--ink-3);font-size:11px}
-svg.diagram .edge{stroke:var(--ink-3);stroke-width:1.3;fill:none;marker-end:url(#arrow)}
-
-/* ---- checklist ---- */
-.checks{list-style:none;padding:0;margin:0 0 18px}
-.checks li{position:relative;padding:8px 0 8px 30px;border-bottom:1px solid var(--line);margin:0}
-.checks li::before{content:"";position:absolute;left:0;top:13px;width:14px;height:14px;box-sizing:border-box;border:1.5px solid var(--line-2);border-radius:3px}
-.checks li.done::before{background:var(--good);border-color:var(--good)}
-
-/* ---- key/value ---- */
-.kv{display:grid;grid-template-columns:max-content 1fr;gap:6px 20px;font-size:14px;margin:12px 0 18px}
-.kv dt{color:var(--ink-3)}.kv dd{margin:0;color:var(--ink-2)}
-
-/* ---- bars (pure CSS, set --w) ---- */
-.bars{display:grid;gap:8px;margin:14px 0 22px;font-size:13px}
-.bars>div{display:grid;grid-template-columns:120px 1fr 56px;align-items:center;gap:12px}
-.bars .bar{height:8px;background:var(--surface-2);border-radius:4px;overflow:hidden}
-.bars .bar i{display:block;height:100%;width:var(--w);background:var(--blue)}
-.bars .val{text-align:right;color:var(--ink-3);font-family:var(--mono);font-size:12px}
-
-footer{margin-top:80px;padding-top:18px;border-top:1px solid var(--line);font-size:12px;color:var(--ink-3);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
-
-/* ---- responsive / print ---- */
-@media (max-width:900px){
-  nav.toc{position:static;width:auto;border:0;padding:28px 20px 0}
-  main{padding:28px 20px 120px}
-  header.plan h1{font-size:32px}
-  .timeline{grid-auto-flow:row;gap:10px}.timeline::before{display:none}
-  .bars>div{grid-template-columns:90px 1fr 48px}
+svg.diagram .box{fill:var(--surface);stroke:var(--line-2);stroke-width:1.2}svg.diagram .box.hot{fill:var(--blue-soft);stroke:var(--blue)}svg.diagram text{fill:var(--ink)}svg.diagram .lbl{fill:var(--ink-3);font-size:11px}svg.diagram .edge{stroke:var(--ink-3);stroke-width:1.3;fill:none;marker-end:url(#arrow)}
+/* A plain-language before/after visual that also works offline. */
+.change-map{padding:0}.change-map .map-heading{padding:15px 22px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:12px;font:600 9px/1.5 var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
+.change-map .map-heading span:last-child{font-weight:400;letter-spacing:0;text-transform:none}
+.change-rows{padding:8px 22px}.change-row{display:grid;grid-template-columns:65px minmax(0,1fr) 20px minmax(0,1fr) 20px minmax(0,1fr);gap:9px;align-items:center;padding:18px 0}.change-row+.change-row{border-top:1px dashed var(--line)}
+.change-row .row-label{font:600 10px var(--sans);color:var(--ink-3)}
+.flow-node{padding:13px 10px;border:1px solid var(--line);border-radius:7px;font-size:12px;font-weight:600;text-align:center;background:#fafbfc;line-height:1.5}.flow-node small{display:block;font-size:10px;font-weight:400;color:var(--ink-3);margin-top:3px}.flow-node.hot{background:var(--blue-soft);border-color:var(--blue-line);color:var(--blue-ink)}
+.flow-arrow{font-size:17px;color:var(--line-2);text-align:center}.change-map figcaption{border-top:1px solid var(--line);margin:0;padding:12px 22px;background:#fafbfc}
+.checks,.questions{list-style:none;padding:0;margin:0 0 20px}.checks li,.questions li{position:relative;padding:16px 16px 16px 42px;border-bottom:1px solid var(--line);margin:0;font-size:13px}
+.checks li{cursor:pointer}.checks li:hover{background:var(--paper)}
+.checks li::before{content:"";position:absolute;left:10px;top:20px;width:16px;height:16px;border:1.5px solid var(--line-2);border-radius:4px;color:#fff;font-size:11px;font-weight:700;line-height:13px;text-align:center}
+.checks li:hover::before{border-color:var(--blue)}.checks li.done::before{content:"\2713";background:var(--good);border-color:var(--good)}.checks li.done{color:var(--ink-2)}
+.questions{counter-reset:q}.questions li{counter-increment:q}.questions li::before{content:"Q" counter(q);position:absolute;left:5px;top:20px;font:10px var(--mono);color:var(--ink-3)}
+.kv{display:grid;grid-template-columns:110px minmax(0,1fr);gap:14px 20px;padding:20px 22px;background:var(--surface);border-radius:8px;font-size:12px;margin:24px 0}.kv dt{font-weight:600;color:var(--ink-2)}.kv dd{margin:0;color:var(--ink-2)}
+.bars{display:grid;gap:10px;margin:20px 0;font-size:12px}.bars>div{display:grid;grid-template-columns:120px 1fr 56px;align-items:center;gap:12px}.bars .bar{height:6px;background:var(--surface-2);border-radius:4px;overflow:hidden}.bars .bar i{display:block;height:100%;width:var(--w);background:var(--blue)}.bars .val{text-align:right;color:var(--ink-3);font:11px var(--mono)}
+.skip-link{position:fixed;left:16px;top:-100px;padding:12px;background:var(--paper);z-index:5}.skip-link:focus{top:12px}
+@media(min-width:1600px){main{padding-top:64px}}
+@media(max-width:1100px){:root{--side:210px}nav.toc{padding-left:14px;padding-right:14px}main{padding:40px 32px}.document-bar{padding:0 32px}.change-row{grid-template-columns:45px minmax(0,1fr) 14px minmax(0,1fr) 14px minmax(0,1fr);gap:6px}}
+@media(max-width:800px){
+ .page{padding-left:0}nav.toc{position:sticky;top:0;width:100%;padding:12px 20px;display:block;border-right:0;border-bottom:1px solid var(--line)}
+ .brand{font-size:17px;margin:0 0 10px}.brand-mark{padding:4px;grid-template-columns:repeat(2,5px);gap:2px}.brand-mark i{width:5px;height:5px}
+ .nav-label{display:none}nav.toc ol{display:flex;overflow-x:auto;gap:5px;scrollbar-width:thin}nav.toc li{flex-shrink:0;margin:0}nav.toc li a{padding:6px 9px;font-size:11px;gap:6px}
+ .document-bar{height:48px;padding:0 24px}main{padding:34px 24px}html{scroll-padding-top:120px}header.plan h1{font-size:38px;max-width:600px}header.plan .sub{font-size:15px}
+ section{padding-top:32px}.table-scroll table{min-width:560px}.timeline{grid-auto-flow:row;gap:12px}.timeline::before{display:none}.timeline>div{padding:0 0 0 24px}.timeline>div::before{top:5px}
 }
+@media(max-width:480px){
+ main{padding:28px 20px}.document-bar{padding:0 20px}header.plan h1{font-size:34px}.meta{font-size:10px}.document-bar{font-size:10px}section h2{font-size:18px}
+ .change-map .map-heading{padding:13px 14px}.map-heading span:last-child{display:none}.change-rows{padding:0 14px}.change-row{grid-template-columns:minmax(0,1fr) 14px minmax(0,1fr) 14px minmax(0,1fr);gap:4px;padding:13px 0}.change-row .row-label{grid-column:1/-1;margin-bottom:6px}.flow-node{font-size:10px;padding:10px 4px}.flow-node small{font-size:9px}.change-map figcaption{padding:12px 14px}
+ .step{padding:18px 14px;gap:10px;grid-template-columns:26px minmax(0,1fr)}.step::before{width:26px;height:28px;line-height:28px;font-size:10px}.step h3{font-size:15px}.callout{padding:18px}.kv{grid-template-columns:1fr;gap:5px;padding:18px}.kv dd+dt{margin-top:10px}.phase{gap:8px}.phase span{font-size:11px}figure{padding:16px}.bars>div{grid-template-columns:80px 1fr 40px}
+}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important}}
 @media print{
-  nav.toc{display:none}
-  main{margin:0;padding:0;max-width:none}
-  section{break-inside:avoid-page}figure,.step,table{break-inside:avoid}
-  body{font-size:12.5px}a{color:inherit}
+ @page{margin:16mm}body{background:#fff;font-size:11px}.page{padding:0}nav.toc,.document-bar,.skip-link{display:none}main{padding:0;max-width:none}header.plan h1{font-size:32px}section{padding-top:24px}section h2{break-after:avoid}figure,.step,.callout,tr{break-inside:avoid}.table-scroll{overflow:visible}table{font-size:10px}a{color:inherit}.callout,.chip,.flow-node{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
 </style>
 <!-- Per-plan design overrides. Fill ONLY when the user asked for a design change
@@ -177,134 +160,124 @@ footer{margin-top:80px;padding-top:18px;border-top:1px solid var(--line);font-si
 <style id="custom"></style>
 </head>
 <body>
+<a class="skip-link" href="#main">Skip to plan</a>
 <div class="page">
 <nav class="toc" aria-label="Contents">
-  <div class="brand">Blueprint</div>
+  <a class="brand" href="#main" aria-label="Blueprint, back to top"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>blueprint</a>
+  <div class="nav-label">In this plan</div>
   <ol id="toc"></ol>
 </nav>
+<div class="document-bar"><div><b>Workspace</b><span class="slash">/</span>Implementation plan</div></div>
 
-<main>
+<main id="main">
 <!-- ============ 00 HEADER ============ -->
 <header class="plan">
+  <div class="eyebrow">Implementation plan</div>
   <h1>{{TITLE — ≤ 8 words, names the outcome}}</h1>
   <p class="sub">{{One sentence: what this plan achieves and for whom.}}</p>
   <div class="meta">
-    <span><b>{{Sep 24, 2026}}</b></span>
+    <span>Blueprint</span>
+    <span><b>{{date time}}</b></span>
     <span>{{repo-name}}</span>
   </div>
 </header>
 
-<!-- ============ 01 SUMMARY ============ -->
-<section id="summary">
-  <h2><span class="n">01</span>Summary</h2>
-  <figure>
-    <pre class="mermaid">
-flowchart LR
-  A[Today] --> B[The change]
-  B --> C[Result]
-    </pre>
-    <figcaption>{{The change in one sentence, plain words.}}</figcaption>
+<!-- ============ 01 OVERVIEW ============ -->
+<section id="overview">
+  <h2><span class="n">01</span>Overview</h2>
+  <figure class="change-map" aria-label="{{Accessible description of the change}}">
+    <div class="map-heading"><span>The change at a glance</span><span>{{One-line outcome}}</span></div>
+    <div class="change-rows">
+      <div class="change-row">
+        <span class="row-label">Today</span>
+        <div class="flow-node">{{Input}}<small>{{Current input detail}}</small></div>
+        <span class="flow-arrow" aria-hidden="true">→</span>
+        <div class="flow-node">{{Current behavior}}<small>{{Current behavior detail}}</small></div>
+        <span class="flow-arrow" aria-hidden="true">→</span>
+        <div class="flow-node">{{Current outcome}}<small>{{Current outcome detail}}</small></div>
+      </div>
+      <div class="change-row">
+        <span class="row-label">Proposed</span>
+        <div class="flow-node">{{Input}}<small>{{Proposed input detail}}</small></div>
+        <span class="flow-arrow" aria-hidden="true">→</span>
+        <div class="flow-node hot">{{The change}}<small>{{How the change works}}</small></div>
+        <span class="flow-arrow" aria-hidden="true">→</span>
+        <div class="flow-node">{{Proposed outcome}}<small>{{Proposed outcome detail}}</small></div>
+      </div>
+    </div>
+    <figcaption>{{What changes, in plain language.}}</figcaption>
   </figure>
-  <p class="lede">{{2–4 sentences. What we're doing, why now, how big. Written so the user could stop reading here and still say yes or no.}}</p>
-  <div class="callout decision">
-    <div class="k">Decision needed</div>
-    <p>{{The one thing the user must decide or approve, then what happens first on approval. If nothing to decide, keep only the first step.}}</p>
-  </div>
+  <p class="lede">{{2–3 short sentences: what changes and why it matters. Explain the outcome directly, without a separate approval prompt.}}</p>
 </section>
 
-<!-- ============ 02 CONTEXT ============ -->
-<section id="context">
-  <h2><span class="n">02</span>Context</h2>
-  <p>{{Current state, in prose. What exists today and what's wrong or missing.}}</p>
-  <h3>What I found</h3>
-  <ul>
-    <li>{{Finding with a path}} — <span class="path">src/example.ts</span></li>
-  </ul>
-  <dl class="kv">
-    <dt>Constraints</dt><dd>{{Time, compatibility, dependencies, no-go areas}}</dd>
-    <dt>Out of scope</dt><dd>{{What this plan deliberately does not touch}}</dd>
-  </dl>
-</section>
-
-<!-- ============ 03 APPROACH ============ -->
-<section id="approach">
-  <h2><span class="n">03</span>Approach</h2>
-  <p>{{The idea in one paragraph. How the pieces fit.}}</p>
-  <!-- Technical diagram: keep only if it shows more than the Summary visual. -->
-  <figure>
-    <pre class="mermaid">
-flowchart LR
-  A[Current] --> B[Change]
-  B --> C[Result]
-    </pre>
-    <figcaption>{{What the diagram shows.}}</figcaption>
-  </figure>
-  <h3>Options considered</h3>
-  <table>
-    <thead><tr><th>Option</th><th>For</th><th>Against</th><th>Verdict</th></tr></thead>
-    <tbody>
-      <tr class="chosen"><td>{{A}}</td><td>{{…}}</td><td>{{…}}</td><td><span class="chip blue">Chosen</span></td></tr>
-      <tr><td>{{B}}</td><td>{{…}}</td><td>{{…}}</td><td>{{Rejected: reason}}</td></tr>
-    </tbody>
-  </table>
-</section>
-
-<!-- ============ 04 STEPS ============ -->
-<section id="steps">
-  <h2><span class="n">04</span>Steps</h2>
-  <div class="phase"><b>Phase 1</b><span>{{Phase goal}}</span></div>
-  <ol class="steps">
+<!-- ============ 02 SOLUTION ============ -->
+<section id="solution">
+  <h2><span class="n">02</span>Solution</h2>
+  <p>{{How the solution works and why it fits. Include only context that explains a decision, with file references where relevant.}}</p>
+  <!-- Add a technical diagram only if it explains something the Overview visual does not. -->
+  <h3>What changes</h3>
+  <!-- Follow the triggering request or user action in runtime call order, not edit order.
+       Use one primary file per node. Show unchanged handoffs in the explanation.
+       Put tests, config, and docs alongside the file they support, outside the call chain. -->
+  <ol class="steps request-flow" aria-label="Files in request order">
     <li class="step">
       <div>
-        <h3>{{Step title — verb first}}</h3>
-        <div class="facts"><span><b>Effort</b> S</span><span><b>Depends on</b> —</span><span><b>Risk</b> low</span></div>
-        <p>{{What changes and why, 1–3 sentences.}}</p>
-        <div class="files"><span class="path">src/a.ts</span><span class="path new">src/b.ts</span></div>
-        <div class="verify"><b>Verify</b>{{How we know this step worked.}}</div>
+        <div class="flow-stage">{{What the request does at this point}}</div>
+        <h3 class="file-heading"><code>{{src/path/to/file.ts}}</code><span class="chip">Update</span></h3>
+        <p>{{What changes in this file, what it receives, and where the request goes next.}}</p>
+        <div class="verify"><b>Verify</b>{{Observable behavior that proves this change works.}}</div>
+        <!-- Omit supporting files when there are none. Use New for new files. -->
+        <details class="related-files">
+          <summary>Supporting files</summary>
+          <dl>
+            <dt><span class="path new">{{src/path/to/file.test.ts}}</span> <span class="chip">New</span></dt>
+            <dd>{{What changes here and why it supports this point in the flow.}}</dd>
+          </dl>
+        </details>
       </div>
     </li>
   </ol>
+  <!-- Add constraints, alternatives, or risks here only when useful.
+       Keep verification beside the relevant file; do not add a completion checklist.
+       Weave essential constraints into the relevant explanation. Ask blocking questions in chat; do not add approval or scope callouts by default.
+       Promote a topic to its own top-level section only when it needs separate review.
+       The navigation and section numbers are generated from the sections present. -->
 </section>
 
-<!-- ============ 05 RISKS ============ -->
-<section id="risks">
-  <h2><span class="n">05</span>Risks &amp; open questions</h2>
-  <table>
-    <thead><tr><th>Risk</th><th>Likelihood</th><th>Impact</th><th>Mitigation</th></tr></thead>
-    <tbody>
-      <tr><td>{{Risk}}</td><td><span class="chip warn">Medium</span></td><td><span class="chip bad">High</span></td><td>{{Mitigation}}</td></tr>
-    </tbody>
-  </table>
-  <h3>Open questions</h3>
-  <ul class="checks">
-    <li>{{Question the user should answer before or during the work}}</li>
-  </ul>
-</section>
-
-<!-- ============ 06 VERIFICATION ============ -->
-<section id="verification">
-  <h2><span class="n">06</span>Verification</h2>
-  <ul class="checks">
-    <li>{{End-to-end check no single step's Verify covers. Three at most; delete the section if none.}}</li>
-  </ul>
-</section>
-
-<footer>
-  <span>Blueprint · generated by {{agent}} · {{date time}}</span>
-  <span>{{path to this file}}</span>
-</footer>
 </main>
 </div>
 
 <script>
+// Document utilities do not submit approval or trigger implementation.
+document.querySelectorAll('main table').forEach(function(table){
+  var wrapper=document.createElement('div'); wrapper.className='table-scroll';
+  wrapper.tabIndex=0; wrapper.setAttribute('role','region');
+  wrapper.setAttribute('aria-label', table.closest('section').querySelector('h2').textContent.replace(/^\d+/, '').trim()+' table');
+  table.before(wrapper); wrapper.appendChild(table);
+});
+// Expand supporting files for print, then restore the reader's view.
+var printDetails=[];
+window.addEventListener('beforeprint',function(){
+  printDetails=Array.from(document.querySelectorAll('details:not([open])'));
+  printDetails.forEach(function(detail){ detail.open=true; });
+});
+window.addEventListener('afterprint',function(){
+  printDetails.forEach(function(detail){ detail.open=false; });
+  printDetails=[];
+});
 // Build the table of contents from section h2s and highlight on scroll.
 (function(){
   var toc=document.getElementById('toc');
-  var secs=[].slice.call(document.querySelectorAll('main section[id]'));
-  secs.forEach(function(s){
-    var h=s.querySelector('h2'); if(!h) return;
-    var nEl=h.querySelector('.n'); var n=nEl?nEl.textContent:'';
-    var t=h.textContent.replace(n,'').trim();
+  var secs=[].slice.call(document.querySelectorAll('main > section[id]'));
+  secs=secs.filter(function(s){ return s.querySelector('h2'); });
+  secs.forEach(function(s,index){
+    var h=s.querySelector('h2');
+    var nEl=h.querySelector('.n');
+    if(nEl) nEl.remove();
+    var t=h.textContent.trim();
+    var n=String(index+1).padStart(2,'0');
+    nEl=document.createElement('span'); nEl.className='n'; nEl.textContent=n;
+    h.prepend(nEl);
     var li=document.createElement('li');
     var a=document.createElement('a'); a.href='#'+s.id;
     var sn=document.createElement('span'); sn.className='n'; sn.textContent=n;
@@ -312,19 +285,53 @@ flowchart LR
     a.appendChild(sn); a.appendChild(st); li.appendChild(a); toc.appendChild(li);
   });
   var links=[].slice.call(toc.querySelectorAll('a'));
-  if('IntersectionObserver' in window){
-    var io=new IntersectionObserver(function(es){
-      es.forEach(function(e){ if(e.isIntersecting){
-        links.forEach(function(l){ l.classList.toggle('active', l.hash==='#'+e.target.id); });
-      }});
-    },{rootMargin:'-15% 0px -75% 0px'});
-    secs.forEach(function(s){ io.observe(s); });
+  // Track headings, including short sections at the end of the document.
+  var pending=false;
+  function updateLocation(){
+    pending=false;
+    var threshold=window.matchMedia('(max-width:800px)').matches?140:80;
+    var current=secs[0];
+    secs.forEach(function(section){
+      if(section.getBoundingClientRect().top<=threshold) current=section;
+    });
+    if(window.scrollY+window.innerHeight>=document.documentElement.scrollHeight-4) current=secs[secs.length-1];
+    links.forEach(function(link){
+      var active=current && link.hash==='#'+current.id;
+      link.classList.toggle('active',!!active);
+      if(active) link.setAttribute('aria-current','location');
+      else link.removeAttribute('aria-current');
+    });
   }
-  if(links[0]) links[0].classList.add('active');
+  function schedule(){ if(!pending){ pending=true; requestAnimationFrame(updateLocation); } }
+  window.addEventListener('scroll',schedule,{passive:true});
+  window.addEventListener('resize',schedule);
+  window.addEventListener('load',schedule);
+  updateLocation();
+})();
+</script>
+<script>
+// Checklists are clickable; state persists per file in localStorage.
+(function(){
+  var items=[].slice.call(document.querySelectorAll('.checks li'));
+  var key='blueprint:'+location.pathname;
+  var saved={}; try{ saved=JSON.parse(localStorage.getItem(key)||'{}')||{}; if(typeof saved!=='object') saved={}; }catch(e){}
+  function sync(li){ li.setAttribute('aria-checked', li.classList.contains('done')); }
+  function save(){
+    var s={}; items.forEach(function(li,i){ s[i]=li.classList.contains('done'); });
+    try{ localStorage.setItem(key, JSON.stringify(s)); }catch(e){}
+  }
+  items.forEach(function(li,i){
+    if(i in saved) li.classList.toggle('done', !!saved[i]);
+    li.setAttribute('role','checkbox'); li.tabIndex=0; sync(li);
+    function toggle(){ li.classList.toggle('done'); sync(li); save(); }
+    li.addEventListener('click', function(e){ if(!e.target.closest('a')) toggle(); });
+    li.addEventListener('keydown', function(e){ if(e.target.closest('a')) return; if(e.key===' '||e.key==='Enter'){ e.preventDefault(); toggle(); } });
+  });
 })();
 </script>
 <script type="module">
-// Mermaid from CDN; if offline, show the source instead of a broken box.
+// Load Mermaid only when this plan uses it; show source if unavailable.
+if(document.querySelector('pre.mermaid')){
 try{
   const m=(await import('https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs')).default;
   m.initialize({
@@ -332,21 +339,22 @@ try{
     fontFamily:'-apple-system, BlinkMacSystemFont, Inter, "Segoe UI", sans-serif',
     themeVariables:{
       fontSize:'13px',
-      primaryColor:'#E8EDFB', primaryBorderColor:'#2451D6', primaryTextColor:'#1E1D1A',
-      secondaryColor:'#F4F3EE', secondaryBorderColor:'#CFCDC3', secondaryTextColor:'#1E1D1A',
-      tertiaryColor:'#FBFBF9', tertiaryBorderColor:'#E2E0D8', tertiaryTextColor:'#55534C',
-      lineColor:'#8E8C83', textColor:'#1E1D1A', mainBkg:'#F4F3EE', nodeBorder:'#CFCDC3',
-      clusterBkg:'#FBFBF9', clusterBorder:'#E2E0D8', edgeLabelBackground:'#FFFFFF',
-      actorBkg:'#F4F3EE', actorBorder:'#CFCDC3', actorTextColor:'#1E1D1A', actorLineColor:'#CFCDC3',
-      signalColor:'#55534C', signalTextColor:'#1E1D1A', noteBkgColor:'#FBF0DC', noteBorderColor:'#EED9B0',
-      activationBkgColor:'#E8EDFB', activationBorderColor:'#2451D6',
-      sectionBkgColor:'#F4F3EE', altSectionBkgColor:'#FBFBF9', taskBkgColor:'#E8EDFB', taskBorderColor:'#2451D6',
-      taskTextColor:'#1E1D1A', taskTextDarkColor:'#1E1D1A', activeTaskBkgColor:'#2451D6', activeTaskBorderColor:'#1A3CA8',
-      doneTaskBkgColor:'#ECEAE2', doneTaskBorderColor:'#CFCDC3', gridColor:'#E2E0D8', todayLineColor:'#B23A32'
+      primaryColor:'#eef2ff', primaryBorderColor:'#345bd6', primaryTextColor:'#202936',
+      secondaryColor:'#f2f3f4', secondaryBorderColor:'#c6ced7', secondaryTextColor:'#202936',
+      tertiaryColor:'#f5f5f2', tertiaryBorderColor:'#e1e5e9', tertiaryTextColor:'#526071',
+      lineColor:'#697585', textColor:'#202936', mainBkg:'#f2f3f4', nodeBorder:'#c6ced7',
+      clusterBkg:'#f5f5f2', clusterBorder:'#e1e5e9', edgeLabelBackground:'#FFFFFF',
+      actorBkg:'#f2f3f4', actorBorder:'#c6ced7', actorTextColor:'#202936', actorLineColor:'#c6ced7',
+      signalColor:'#526071', signalTextColor:'#202936', noteBkgColor:'#fcf5e8', noteBorderColor:'#ead9b5',
+      activationBkgColor:'#eef2ff', activationBorderColor:'#345bd6',
+      sectionBkgColor:'#f2f3f4', altSectionBkgColor:'#f5f5f2', taskBkgColor:'#eef2ff', taskBorderColor:'#345bd6',
+      taskTextColor:'#202936', taskTextDarkColor:'#202936', activeTaskBkgColor:'#345bd6', activeTaskBorderColor:'#2949b0',
+      doneTaskBkgColor:'#e8ebef', doneTaskBorderColor:'#c6ced7', gridColor:'#e1e5e9', todayLineColor:'#ad433c'
     }
   });
   await m.run({querySelector:'pre.mermaid'});
 }catch(e){ document.body.classList.add('no-mermaid'); }
+}
 </script>
 </body>
 </html>
