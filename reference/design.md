@@ -29,7 +29,7 @@ The shared design lives in `templates/plan.html`. Each generated plan inherits i
 ## Layout and behavior
 
 - Default to Overview and Solution. Supporting details live inside Solution; extra top-level sections appear only when they need independent review. Navigation and numbering derive from the sections present.
-- A fixed 248px sidebar holds the brand and generated section navigation. Main content is at most 900px wide with 48px side gutters.
+- A fixed 248px sidebar holds the brand and generated section navigation. A round handle on its edge, or the `[` key, folds it to a 72px rail of section numbers with hover labels; the choice persists across plans. Main content is at most 900px wide with 48px side gutters.
 - At 1100px the sidebar and gutters narrow. At 800px navigation becomes a sticky horizontal list. At 480px map row labels move above the flow, and supporting lists stack.
 - Tables scroll inside their own focusable region on small screens. Step cards keep a continuous counter across phases.
 - Standard plans use non-interactive verification beside each file change. Completion checklists are omitted; the checklist component is reserved for explicitly requested tracking.
