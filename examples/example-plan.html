@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Add rate limiting to the public API · Blueprint</title>
+<script>try{if(localStorage.getItem('blueprint:toc-collapsed')==='1')document.documentElement.classList.add('toc-collapsed')}catch(e){}</script>
 <style>
 /* Blueprint's shared design system. Per-plan overrides belong in #custom. */
 :root{
@@ -51,6 +52,23 @@ nav.toc li a{display:flex;align-items:baseline;gap:12px;padding:11px 12px;border
 nav.toc li a .n{font:11px var(--mono);color:var(--ink-3)}
 nav.toc li a:hover{background:var(--surface);text-decoration:none}
 nav.toc li a.active{background:var(--blue-soft);color:var(--blue-ink);font-weight:600}nav.toc li a.active .n{color:var(--blue)}
+/* Collapsible sidebar: folds to a numbered rail; the handle sits on its edge. */
+.toc-toggle{position:fixed;top:40px;left:calc(var(--side) - 13px);z-index:4;width:26px;height:26px;padding:0;border-radius:50%;border:1px solid var(--line-2);background:var(--paper);box-shadow:0 1px 3px rgba(32,41,54,.08);display:grid;place-items:center;color:var(--ink-3)}
+.toc-toggle::before{content:"";width:6px;height:6px;border-left:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:translateX(1px) rotate(45deg)}
+.toc-toggle:hover{color:var(--blue);border-color:var(--blue-line)}
+html.toc-anim .page,html.toc-anim nav.toc,html.toc-anim .toc-toggle{transition:padding .22s ease,width .22s ease,left .22s ease}
+@media(min-width:801px){
+ html.toc-collapsed{--side:72px}
+ html.toc-collapsed nav.toc{padding:36px 10px 24px;overflow:visible}
+ html.toc-collapsed .brand{justify-content:center;margin:0 0 48px;gap:0}
+ html.toc-collapsed .brand-name{display:none}
+ html.toc-collapsed .nav-label{visibility:hidden}
+ html.toc-collapsed nav.toc li a{justify-content:center;padding:11px 0;gap:0;position:relative}
+ html.toc-collapsed nav.toc li a .label{display:none}
+ html.toc-collapsed nav.toc li a::after{content:attr(data-label);position:absolute;left:calc(100% + 14px);top:50%;transform:translate(-4px,-50%);white-space:nowrap;padding:5px 10px;border-radius:6px;background:var(--ink);color:#fff;font:500 12px/1.4 var(--sans);opacity:0;pointer-events:none;transition:opacity .12s,transform .12s}
+ html.toc-collapsed nav.toc li a:hover::after,html.toc-collapsed nav.toc li a:focus-visible::after{opacity:1;transform:translate(0,-50%)}
+ html.toc-collapsed .toc-toggle::before{transform:translateX(-1px) rotate(225deg)}
+}
 .document-bar{height:65px;padding:0 48px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:16px;font-size:11px;color:var(--ink-3);background:var(--bg)}
 .document-bar b{font-weight:500;color:var(--ink-2)}.document-bar .slash{padding:0 12px;color:var(--line-2)}
 main{width:100%;max-width:calc(var(--content) + 96px);margin:0 auto;padding:52px 48px 48px}
@@ -151,7 +169,7 @@ svg.diagram .box{fill:var(--surface);stroke:var(--line-2);stroke-width:1.2}svg.d
 @media(min-width:1600px){main{padding-top:64px}}
 @media(max-width:1100px){:root{--side:210px}nav.toc{padding-left:14px;padding-right:14px}main{padding:40px 32px}.document-bar{padding:0 32px}.change-row{grid-template-columns:45px minmax(0,1fr) 14px minmax(0,1fr) 14px minmax(0,1fr);gap:6px}}
 @media(max-width:800px){
- .page{padding-left:0}nav.toc{position:sticky;top:0;width:100%;padding:12px 20px;display:block;border-right:0;border-bottom:1px solid var(--line)}
+ .page{padding-left:0}.toc-toggle{display:none}nav.toc{position:sticky;top:0;width:100%;padding:12px 20px;display:block;border-right:0;border-bottom:1px solid var(--line)}
  .brand{font-size:17px;margin:0 0 10px}.brand-mark{padding:4px;grid-template-columns:repeat(2,5px);gap:2px}.brand-mark i{width:5px;height:5px}
  .nav-label{display:none}nav.toc ol{display:flex;overflow-x:auto;gap:5px;scrollbar-width:thin}nav.toc li{flex-shrink:0;margin:0}nav.toc li a{padding:6px 9px;font-size:11px;gap:6px}
  .document-bar{height:48px;padding:0 24px}main{padding:34px 24px}html{scroll-padding-top:120px}header.plan h1{font-size:38px;max-width:600px}header.plan .sub{font-size:15px}
@@ -164,7 +182,7 @@ svg.diagram .box{fill:var(--surface);stroke:var(--line-2);stroke-width:1.2}svg.d
 }
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important}}
 @media print{
- @page{margin:16mm}body{background:#fff;font-size:11px}.page{padding:0}nav.toc,.document-bar,.skip-link{display:none}main{padding:0;max-width:none}header.plan h1{font-size:32px}section{padding-top:24px}section h2{break-after:avoid}figure,.step,.callout,tr{break-inside:avoid}.carousel{outline:none}.carousel.is-ready .slides{height:auto!important;overflow:visible;transition:none}.carousel .track{display:block;transform:none!important;transition:none}.carousel .track>figure{margin:0 0 16px}.carousel.is-ready .carousel-stage{padding:0}.carousel-nav,.carousel-count{display:none}.table-scroll{overflow:visible}table{font-size:10px}a{color:inherit}.callout,.chip,.flow-node{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+ @page{margin:16mm}body{background:#fff;font-size:11px}.page{padding:0}nav.toc,.toc-toggle,.document-bar,.skip-link{display:none}main{padding:0;max-width:none}header.plan h1{font-size:32px}section{padding-top:24px}section h2{break-after:avoid}figure,.step,.callout,tr{break-inside:avoid}.carousel{outline:none}.carousel.is-ready .slides{height:auto!important;overflow:visible;transition:none}.carousel .track{display:block;transform:none!important;transition:none}.carousel .track>figure{margin:0 0 16px}.carousel.is-ready .carousel-stage{padding:0}.carousel-nav,.carousel-count{display:none}.table-scroll{overflow:visible}table{font-size:10px}a{color:inherit}.callout,.chip,.flow-node{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
 </style>
 <!-- Per-plan design overrides. Fill ONLY when the user asked for a design change
@@ -175,10 +193,11 @@ svg.diagram .box{fill:var(--surface);stroke:var(--line-2);stroke-width:1.2}svg.d
 <a class="skip-link" href="#main">Skip to plan</a>
 <div class="page">
 <nav class="toc" aria-label="Contents">
-  <a class="brand" href="#main" aria-label="Blueprint, back to top"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>blueprint</a>
+  <a class="brand" href="#main" aria-label="Blueprint, back to top"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span class="brand-name">blueprint</span></a>
   <div class="nav-label">In this plan</div>
   <ol id="toc"></ol>
 </nav>
+<button class="toc-toggle" type="button" aria-controls="toc" aria-expanded="true" aria-label="Collapse sidebar" title="Collapse sidebar ([)"></button>
 <div class="document-bar"><div><b>Workspace</b><span class="slash">/</span>Implementation plan</div></div>
 
 <main id="main">
@@ -366,7 +385,8 @@ window.addEventListener('afterprint',function(){
     var li=document.createElement('li');
     var a=document.createElement('a'); a.href='#'+s.id;
     var sn=document.createElement('span'); sn.className='n'; sn.textContent=n;
-    var st=document.createElement('span'); st.textContent=t;
+    var st=document.createElement('span'); st.className='label'; st.textContent=t;
+    a.setAttribute('data-label',t);
     a.appendChild(sn); a.appendChild(st); li.appendChild(a); toc.appendChild(li);
   });
   var links=[].slice.call(toc.querySelectorAll('a'));
@@ -392,6 +412,29 @@ window.addEventListener('afterprint',function(){
   window.addEventListener('resize',schedule);
   window.addEventListener('load',schedule);
   updateLocation();
+
+  // Collapse to a rail with the edge handle or "[". The choice persists across plans.
+  var root=document.documentElement, btn=document.querySelector('.toc-toggle');
+  function sync(){
+    var c=root.classList.contains('toc-collapsed');
+    btn.setAttribute('aria-expanded',String(!c));
+    btn.setAttribute('aria-label',c?'Expand sidebar':'Collapse sidebar');
+    btn.title=(c?'Expand':'Collapse')+' sidebar ([)';
+  }
+  function toggleRail(){
+    root.classList.add('toc-anim');
+    var c=root.classList.toggle('toc-collapsed');
+    try{ localStorage.setItem('blueprint:toc-collapsed',c?'1':'0'); }catch(e){}
+    sync();
+  }
+  btn.addEventListener('click',toggleRail);
+  document.addEventListener('keydown',function(e){
+    if(e.key!=='['||e.metaKey||e.ctrlKey||e.altKey) return;
+    if(e.target.closest('input,textarea,select,[contenteditable]')) return;
+    if(window.matchMedia('(max-width:800px)').matches) return;
+    toggleRail();
+  });
+  sync();
 })();
 </script>
 <script>
