@@ -53,6 +53,7 @@ Write so the user understands the plan in one read: short, plain sentences about
 - Every claim about the codebase points to a path. Every step names its files.
 - Prose for reasoning, tables for comparisons, cards for steps. No bullets nested in bullets.
 - Rendered content from code, logs, or user text is escaped as text. Never inject it as markup or script.
+- Every Jira ticket (`SEAR-11369`) and pull request (`#3782`) is a link, with the reference itself as the link text. Take the Jira site URL from the Jira/Atlassian MCP or an existing ticket link in the repo or conversation, and PR URLs from `gh pr view <n> --json url` or the git remote. If a URL can't be confirmed, leave the reference as plain text; never guess a URL.
 - Keep Overview short enough to scan. Group related implementation work; do not repeat the same explanation across sections.
 
 ## Design rules
@@ -78,6 +79,7 @@ If the user asks for a design change on this plan ("make it dark", "denser", "bi
 - A carousel appears only where two or more visuals each earn their place; in Overview the change map is its first slide.
 - Every request-flow node leads with its primary file and has a Verify line. Call order, branches, and return paths are accurate; supporting files are distinguished from runtime calls.
 - Overview and Solution read directly. No default “Decision needed” or “Scope & tradeoffs” blocks; essential constraints are explained inline.
+- Every Jira ticket and pull request reference is a link.
 - Nothing in `<style id="custom">` unless the user asked.
 - File is under `~/.blueprint/` (or the path the user named).
 

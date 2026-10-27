@@ -21,7 +21,7 @@ Optional components for exceptional warnings or explicitly requested annotations
 <div class="callout decision"><div class="k">Decision needed</div><p>Approve the Postgres route over Redis.</p></div>
 <div class="callout warn"><div class="k">Caution</div><p>Migration locks the table for ~2s per 100k rows.</p></div>
 <div class="callout bad"><div class="k">Blocker</div><p>No staging DB exists yet.</p></div>
-<div class="callout good"><div class="k">Already done</div><p>Schema drafted in PR #212.</p></div>
+<div class="callout good"><div class="k">Already done</div><p>Schema drafted in <a href="https://github.com/acme/api/pull/212">#212</a> for <a href="https://acme.atlassian.net/browse/API-481">API-481</a>.</p></div>
 <div class="callout"><div class="k">Note</div><p>Neutral aside.</p></div>
 ```
 
